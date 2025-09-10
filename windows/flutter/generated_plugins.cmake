@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_timezone
   flutter_tts
   flutter_volume_controller
+  geolocator_windows
   permission_handler_windows
 )
 

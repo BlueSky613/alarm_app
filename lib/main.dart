@@ -16,9 +16,7 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final alarms = await StorageService.getAlarms();
 
-  // Listen to alarm events globally
   final int? activeAlarmId = prefs.getInt('alarmActive');
-  print("Active Alarm ID: $activeAlarmId");
   if (activeAlarmId != null && activeAlarmId != 0) {
     final alarm = alarms.firstWhere((a) => a.id.hashCode == activeAlarmId);
     bool result = await Alarm.isRinging(activeAlarmId);

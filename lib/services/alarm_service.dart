@@ -17,15 +17,12 @@ class AlarmService {
   static bool _initialized = false;
 
   static Future<void> initialize() async {
-    print("object ${_initialized}");
 
     tz.initializeTimeZones();
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(currentTimeZone));
 
     if (_initialized) return;
-
-    print("Initializing AlarmService...");
 
     // Initialize timezone data
     tz.initializeTimeZones();

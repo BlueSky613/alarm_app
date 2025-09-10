@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dawn_weaver/services/location_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:dawn_weaver/models/user_profile.dart';
@@ -35,6 +36,8 @@ class ContentService {
   static String _weatherApiKey = dotenv.env['weather_api_key'] ?? '';
   static const String _weatherBaseUrl =
       'https://api.openweathermap.org/data/2.5/weather';
+  static const String _horoscopeBaseUrl =
+      'https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily';
 
   static WakeupContent getContent(String language) {
     return language == 'es'
@@ -52,32 +55,40 @@ class ContentService {
     return content.getMotivationalPhrase();
   }
 
-  static String getHoroscope(UserProfile profile) {
+  static Future<String?> getHoroscope(UserProfile profile) async {
     final content = getContent(profile.language);
-    return content.getHoroscope(profile.zodiacSign);
-  }
-
-  static Future<WeatherData?> getWeatherData({
-    double? latitude,
-    double? longitude,
-    String? cityName,
-  }) async {
     try {
       String url;
-      if (latitude != null && longitude != null) {
-        url =
-            '$_weatherBaseUrl?lat=$latitude&lon=$longitude&appid=$_weatherApiKey';
-      } else if (cityName != null) {
-        url = '$_weatherBaseUrl?q=$cityName&appid=$_weatherApiKey';
-      } else {
-        // Default to a sample city if no location provided
-        return _getSampleWeatherData();
-      }
-
+      url =
+          '$_horoscopeBaseUrl?sign=${profile.zodiacSign.toString()}&day=TODAY';
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return WeatherData.fromJson(data);
+        return data['horoscope_data'];
+      } else {
+        return content.getHoroscope(profile.zodiacSign);
+      }
+    } catch (e) {
+      print('Error fetching horoscope: $e');
+    }
+    return content.getHoroscope(profile.zodiacSign);
+  }
+
+  static Future<WeatherData?> getWeatherData() async {
+    try {
+      String url;
+      final location = await LocationService.getCurrentPosition();
+      if (location != null) {
+        url =
+            '$_weatherBaseUrl?lat=${location.latitude}&lon=${location.longitude}&appid=$_weatherApiKey';
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          return WeatherData.fromJson(data);
+        }
+      } else {
+        // Default to a sample city if no location provided
+        return _getSampleWeatherData();
       }
     } catch (e) {
       print('Error fetching weather data: $e');
