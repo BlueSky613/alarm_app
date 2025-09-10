@@ -23,7 +23,8 @@ class WakeupScreen extends StatefulWidget {
 class _WakeupScreenState extends State<WakeupScreen>
     with TickerProviderStateMixin {
   UserProfile? _userProfile;
-  WeatherData? _weatherData;
+  String? _weatherData;
+  String? _horoscope;
   List<String> _contentList = [];
   int _currentContentIndex = 0;
   bool _isPlaying = false;
@@ -74,7 +75,11 @@ class _WakeupScreenState extends State<WakeupScreen>
     _userProfile = await StorageService.getUserProfile();
 
     if (widget.alarm.hasWeather) {
-      _weatherData = await ContentService.getWeatherData();
+      _weatherData = _userProfile!.weather;
+    }
+
+    if (widget.alarm.hasHoroscope) {
+      _horoscope = _userProfile!.horoscope;
     }
 
     if (_userProfile != null) {
@@ -84,6 +89,7 @@ class _WakeupScreenState extends State<WakeupScreen>
         includeMotivation: widget.alarm.hasMotivation,
         includeWeather: widget.alarm.hasWeather,
         weatherData: _weatherData,
+        horoscope: _horoscope,
       );
 
       setState(() {});
@@ -269,7 +275,7 @@ class _WakeupScreenState extends State<WakeupScreen>
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: Text(
-                  'Good morning, ${_userProfile!.name}! 🌅',
+                  'Hello, ${_userProfile!.name}! 🌅',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 24,
@@ -341,6 +347,8 @@ class _WakeupScreenState extends State<WakeupScreen>
               ),
               Expanded(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       '${_currentContentIndex + 1} of ${_contentList.length}',
@@ -350,17 +358,35 @@ class _WakeupScreenState extends State<WakeupScreen>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      _currentContentIndex < _contentList.length
-                          ? _contentList[_currentContentIndex]
-                          : '',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        height: 1.4,
-                      ),
-                    ),
+                    _currentContentIndex == 2 && _contentList.length > 3
+                        ? SizedBox(
+                            height:
+                                150, // Adjust as needed to fit inside the 160 container
+                            child: SingleChildScrollView(
+                              child: Text(
+                                _currentContentIndex < _contentList.length
+                                    ? _contentList[_currentContentIndex]
+                                    : '',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Text(
+                            _currentContentIndex < _contentList.length
+                                ? _contentList[_currentContentIndex]
+                                : '',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              height: 1.4,
+                            ),
+                          ),
                   ],
                 ),
               ),

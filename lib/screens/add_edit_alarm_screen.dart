@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dawn_weaver/models/alarm.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
 import 'package:dawn_weaver/services/alarm_service.dart';
+import 'package:dawn_weaver/services/content_service.dart';
 
 class AddEditAlarmScreen extends StatefulWidget {
   final Alarms? alarm;
@@ -124,8 +125,8 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         Text(
           'Alarm Time',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+                fontWeight: FontWeight.w600,
+              ),
         ),
         const SizedBox(height: 16),
         Center(
@@ -137,15 +138,18 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                 color: Theme.of(context).colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
                 _selectedTime.format(context),
                 style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
               ),
             ),
           ),
@@ -161,8 +165,8 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         Text(
           'Alarm Label (Optional)',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+                fontWeight: FontWeight.w600,
+              ),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -189,8 +193,8 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         Text(
           'Repeat',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+                fontWeight: FontWeight.w600,
+              ),
         ),
         const SizedBox(height: 16),
         Wrap(
@@ -221,18 +225,22 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                   border: Border.all(
                     color: isSelected
                         ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                        : Theme.of(context)
+                            .colorScheme
+                            .outline
+                            .withValues(alpha: 0.3),
                   ),
                 ),
                 child: Center(
                   child: Text(
                     dayName,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context).colorScheme.onSurface,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                    ),
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Theme.of(context).colorScheme.onSurface,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
                   ),
                 ),
               ),
@@ -279,15 +287,18 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         Text(
           'Virtual Character',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+                fontWeight: FontWeight.w600,
+              ),
         ),
         const SizedBox(height: 8),
         Text(
           'Choose who will greet you when you wake up',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
+              ),
         ),
         const SizedBox(height: 16),
         SizedBox(
@@ -314,7 +325,10 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                       border: Border.all(
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                            : Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withValues(alpha: 0.3),
                         width: isSelected ? 3 : 1,
                       ),
                     ),
@@ -322,17 +336,22 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                       children: [
                         Expanded(
                           child: ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(10)),
                             child: Image.network(
                               character,
                               width: 80,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
-                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
                                   child: Icon(
                                     Icons.person,
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
                                   ),
                                 );
                               },
@@ -346,17 +365,23 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                             color: isSelected
                                 ? Theme.of(context).colorScheme.primary
                                 : Theme.of(context).colorScheme.surface,
-                            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
+                            borderRadius: const BorderRadius.vertical(
+                                bottom: Radius.circular(10)),
                           ),
                           child: Text(
                             _characterNames[index],
                             textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.onPrimary
-                                  : Theme.of(context).colorScheme.onSurface,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.onPrimary
+                                      : Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -380,15 +405,18 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         Text(
           'Wake-up Content',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+                fontWeight: FontWeight.w600,
+              ),
         ),
         const SizedBox(height: 8),
         Text(
           'Choose what content to include when you wake up',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
+              ),
         ),
         const SizedBox(height: 16),
         _buildOptionCard(
@@ -441,7 +469,10 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: value
-            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5)
+            ? Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.5)
             : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -457,7 +488,10 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
             decoration: BoxDecoration(
               color: value
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  : Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -465,7 +499,10 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
               size: 20,
               color: value
                   ? Theme.of(context).colorScheme.onPrimary
-                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  : Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(width: 12),
@@ -476,14 +513,17 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.7),
+                      ),
                 ),
               ],
             ),
@@ -505,8 +545,8 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         Text(
           'Snooze Duration',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+                fontWeight: FontWeight.w600,
+              ),
         ),
         const SizedBox(height: 16),
         Row(
@@ -531,18 +571,23 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                       border: Border.all(
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                            : Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withValues(alpha: 0.3),
                       ),
                     ),
                     child: Text(
                       '${minutes}m',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.onPrimary
-                            : Theme.of(context).colorScheme.onSurface,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      ),
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context).colorScheme.onSurface,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
                     ),
                   ),
                 ),
@@ -562,7 +607,10 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         gradient: LinearGradient(
           colors: [
             Theme.of(context).colorScheme.primaryContainer,
-            Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7),
+            Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.7),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -582,9 +630,9 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
               Text(
                 'Alarm Preview',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.w600,
-                ),
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
             ],
           ),
@@ -592,31 +640,31 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
           Text(
             'Time: ${_selectedTime.format(context)}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
           ),
           if (_labelController.text.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
               'Label: ${_labelController.text}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
             ),
           ],
           const SizedBox(height: 4),
           Text(
             'Repeat: ${_getRepeatString()}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
           ),
           const SizedBox(height: 4),
           Text(
             'Content: ${_getContentString()}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
           ),
         ],
       ),
@@ -626,10 +674,14 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
   String _getRepeatString() {
     if (_repeatDays.isEmpty) return 'Once';
     if (_repeatDays.length == 7) return 'Daily';
-    if (_repeatDays.length == 5 && !_repeatDays.contains(0) && !_repeatDays.contains(6)) {
+    if (_repeatDays.length == 5 &&
+        !_repeatDays.contains(0) &&
+        !_repeatDays.contains(6)) {
       return 'Weekdays';
     }
-    if (_repeatDays.length == 2 && _repeatDays.contains(0) && _repeatDays.contains(6)) {
+    if (_repeatDays.length == 2 &&
+        _repeatDays.contains(0) &&
+        _repeatDays.contains(6)) {
       return 'Weekends';
     }
     return _repeatDays.map((day) => _dayNames[day]).join(', ');
@@ -648,7 +700,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
       context: context,
       initialTime: _selectedTime,
     );
-    
+
     if (time != null) {
       setState(() {
         _selectedTime = time;
@@ -657,6 +709,13 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
   }
 
   void _saveAlarm() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final userProfile = await StorageService.getUserProfile();
     final now = DateTime.now();
     final alarmDateTime = DateTime(
       now.year,
@@ -677,12 +736,14 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
       virtualCharacter: _selectedVirtualCharacter,
       snoozeMinutes: _snoozeMinutes,
     );
-
     await StorageService.saveAlarm(alarm);
     await AlarmService.scheduleAlarm(alarm);
-
+    if (_hasHoroscope == true || _hasWeather == true) {
+      await ContentService.getHoroscopeWeather(userProfile!);
+    }
     if (mounted) {
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(); // dismiss progress dialog
+      Navigator.of(context).pop(); // pop screen
     }
   }
 

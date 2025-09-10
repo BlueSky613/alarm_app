@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:dawn_weaver/models/user_profile.dart';
 import 'package:dawn_weaver/models/wakeup_content.dart';
+import 'package:dawn_weaver/services/storage_service.dart';
 
 class WeatherData {
   final String description;
@@ -55,72 +56,90 @@ class ContentService {
     return content.getMotivationalPhrase();
   }
 
-  static Future<String?> getHoroscope(UserProfile profile) async {
-    final content = getContent(profile.language);
+  static getHoroscopeWeather(UserProfile profile) async {
+    final location = await LocationService.getCurrentPosition();
     try {
-      String url;
-      url =
-          '$_horoscopeBaseUrl?sign=${profile.zodiacSign.toString()}&day=TODAY';
-      final response = await http.get(Uri.parse(url));
+      String url1, url2;
+      String horoscope = "", weather = "";
+      url1 =
+          '$_horoscopeBaseUrl?sign=${profile.zodiacSign.toString().split('.')[1]}&day=TODAY';
+      final response = await http.get(Uri.parse(url1));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return data['horoscope_data'];
-      } else {
-        return content.getHoroscope(profile.zodiacSign);
+        horoscope = data['data']['horoscope_data'];
       }
+      if (location != null) {
+        url2 =
+            '$_weatherBaseUrl?lat=${location.latitude}&lon=${location.longitude}&appid=$_weatherApiKey';
+        final response = await http.get(Uri.parse(url2));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          weather = formatWeatherMessage(
+              WeatherData.fromJson(data), profile.language);
+        }
+      }
+      final profiles = UserProfile(
+        weather: weather,
+        horoscope: horoscope,
+      );
+      await StorageService.saveUserProfile(profiles);
     } catch (e) {
       print('Error fetching horoscope: $e');
     }
-    return content.getHoroscope(profile.zodiacSign);
   }
 
-  static Future<WeatherData?> getWeatherData() async {
-    try {
-      String url;
-      final location = await LocationService.getCurrentPosition();
-      if (location != null) {
-        url =
-            '$_weatherBaseUrl?lat=${location.latitude}&lon=${location.longitude}&appid=$_weatherApiKey';
-        final response = await http.get(Uri.parse(url));
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          return WeatherData.fromJson(data);
-        }
-      } else {
-        // Default to a sample city if no location provided
-        return _getSampleWeatherData();
-      }
-    } catch (e) {
-      print('Error fetching weather data: $e');
-    }
+  // static Future<WeatherData?> getWeatherData(UserProfile profile) async {
+  //   try {
+  //     String url;
+  //     final location = await LocationService.getCurrentPosition();
+  //     if (location != null) {
+  //       url =
+  //           '$_weatherBaseUrl?lat=${location.latitude}&lon=${location.longitude}&appid=$_weatherApiKey';
+  //       final response = await http.get(Uri.parse(url));
+  //       if (response.statusCode == 200) {
+  //         final data = json.decode(response.body);
+  //         final profiles = UserProfile(
+  //           weather: formatWeatherMessage(
+  //               WeatherData.fromJson(data), profile.language),
+  //         );
+  //         await StorageService.saveUserProfile(profiles);
+  //         return WeatherData.fromJson(data);
+  //       }
+  //     } else {
+  //       // Default to a sample city if no location provided
+  //       return _getSampleWeatherData();
+  //     }
+  //   } catch (e) {
+  //     print('Error fetching weather data: $e');
+  //   }
 
-    // Return sample weather data if API fails
-    return _getSampleWeatherData();
-  }
+  //   // Return sample weather data if API fails
+  //   return _getSampleWeatherData();
+  // }
 
-  static WeatherData _getSampleWeatherData() {
-    final descriptions = [
-      'Sunny and bright',
-      'Partly cloudy',
-      'Light rain',
-      'Clear skies',
-      'Overcast',
-      'Warm and pleasant',
-      'Cool and crisp',
-      'Perfect weather',
-    ];
+  // static WeatherData _getSampleWeatherData() {
+  //   final descriptions = [
+  //     'Sunny and bright',
+  //     'Partly cloudy',
+  //     'Light rain',
+  //     'Clear skies',
+  //     'Overcast',
+  //     'Warm and pleasant',
+  //     'Cool and crisp',
+  //     'Perfect weather',
+  //   ];
 
-    final now = DateTime.now();
-    final descriptionIndex = now.day % descriptions.length;
-    final temperature = 15 + (now.day % 20); // Temperature between 15-35°C
+  //   final now = DateTime.now();
+  //   final descriptionIndex = now.day % descriptions.length;
+  //   final temperature = 15 + (now.day % 20); // Temperature between 15-35°C
 
-    return WeatherData(
-      description: descriptions[descriptionIndex],
-      temperature: temperature + 273.15, // Convert to Kelvin
-      location: 'Your City',
-      icon: '01d',
-    );
-  }
+  //   return WeatherData(
+  //     description: descriptions[descriptionIndex],
+  //     temperature: temperature + 273.15, // Convert to Kelvin
+  //     location: 'Your City',
+  //     icon: '01d',
+  //   );
+  // }
 
   static String formatWeatherMessage(WeatherData weather, String language) {
     if (language == 'es') {
@@ -162,7 +181,8 @@ class ContentService {
     required bool includeHoroscope,
     required bool includeMotivation,
     required bool includeWeather,
-    WeatherData? weatherData,
+    String? weatherData,
+    String? horoscope,
   }) {
     final contentList = <String>[];
 
@@ -178,11 +198,11 @@ class ContentService {
       final horoscopeIntro = profile.language == 'es'
           ? 'Tu horóscopo para hoy:'
           : 'Your horoscope for today:';
-      contentList.add('$horoscopeIntro ${getHoroscope(profile)}');
+      contentList.add('$horoscopeIntro ${horoscope ?? ''}');
     }
 
     if (includeWeather && weatherData != null) {
-      contentList.add(formatWeatherMessage(weatherData, profile.language));
+      contentList.add(weatherData);
     }
 
     // Add encouraging closing
