@@ -8,6 +8,7 @@ import 'package:dawn_weaver/services/content_service.dart';
 import 'package:dawn_weaver/services/audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dawn_weaver/services/alarm_service.dart';
+import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 
 class WakeupScreen extends StatefulWidget {
   final Alarms alarm;
@@ -91,7 +92,7 @@ class _WakeupScreenState extends State<WakeupScreen>
 
   Future<void> _startWakeupSequence() async {
     // Play alarm sound
-    await AudioService.playAlarmSound(soundPath: widget.alarm.soundPath);
+    // await AudioService.playAlarmSound(soundPath: widget.alarm.soundPath);
     setState(() {
       _isPlaying = true;
     });
@@ -133,7 +134,7 @@ class _WakeupScreenState extends State<WakeupScreen>
   }
 
   void _snoozeAlarm() async {
-    await AudioService.stopAlarmSound();
+    // await AudioService.stopAlarmSound();
     await AlarmService.snoozeAlarm(widget.alarm.id, widget.alarm.snoozeMinutes);
 
     if (mounted) {
@@ -150,7 +151,7 @@ class _WakeupScreenState extends State<WakeupScreen>
   }
 
   void _dismissAlarm() async {
-    await AudioService.stopAlarmSound();
+    // await AudioService.stopAlarmSound();
     await AudioService.stopSpeaking();
     await Alarm.stop(widget.id);
 
@@ -404,10 +405,9 @@ class _WakeupScreenState extends State<WakeupScreen>
                 label: _isPlaying ? 'Mute' : 'Unmute',
                 onTap: () async {
                   if (_isPlaying) {
-                    await AudioService.stopAlarmSound();
+                    await FlutterVolumeController.setMute(true);
                   } else {
-                    await AudioService.playAlarmSound(
-                        soundPath: widget.alarm.soundPath);
+                    await FlutterVolumeController.setMute(false);
                   }
                   setState(() {
                     _isPlaying = !_isPlaying;
@@ -513,7 +513,6 @@ class _WakeupScreenState extends State<WakeupScreen>
   void dispose() {
     _pulseController.dispose();
     _fadeController.dispose();
-    AudioService.stopAlarmSound();
     AudioService.stopSpeaking();
     super.dispose();
   }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:dawn_weaver/models/user_profile.dart';
 import 'package:dawn_weaver/models/wakeup_content.dart';
@@ -26,15 +27,19 @@ class WeatherData {
   }
 
   String get temperatureCelsius => '${(temperature - 273.15).round()}°C';
-  String get temperatureFahrenheit => '${((temperature - 273.15) * 9/5 + 32).round()}°F';
+  String get temperatureFahrenheit =>
+      '${((temperature - 273.15) * 9 / 5 + 32).round()}°F';
 }
 
 class ContentService {
-  static const String _weatherApiKey = 'your_openweather_api_key'; // Replace with actual API key
-  static const String _weatherBaseUrl = 'https://api.openweathermap.org/data/2.5/weather';
+  static String _weatherApiKey = dotenv.env['weather_api_key'] ?? '';
+  static const String _weatherBaseUrl =
+      'https://api.openweathermap.org/data/2.5/weather';
 
   static WakeupContent getContent(String language) {
-    return language == 'es' ? ContentData.spanishContent : ContentData.englishContent;
+    return language == 'es'
+        ? ContentData.spanishContent
+        : ContentData.englishContent;
   }
 
   static String getPersonalizedGreeting(UserProfile profile) {
@@ -60,7 +65,8 @@ class ContentService {
     try {
       String url;
       if (latitude != null && longitude != null) {
-        url = '$_weatherBaseUrl?lat=$latitude&lon=$longitude&appid=$_weatherApiKey';
+        url =
+            '$_weatherBaseUrl?lat=$latitude&lon=$longitude&appid=$_weatherApiKey';
       } else if (cityName != null) {
         url = '$_weatherBaseUrl?q=$cityName&appid=$_weatherApiKey';
       } else {
@@ -76,7 +82,7 @@ class ContentService {
     } catch (e) {
       print('Error fetching weather data: $e');
     }
-    
+
     // Return sample weather data if API fails
     return _getSampleWeatherData();
   }
@@ -92,11 +98,11 @@ class ContentService {
       'Cool and crisp',
       'Perfect weather',
     ];
-    
+
     final now = DateTime.now();
     final descriptionIndex = now.day % descriptions.length;
     final temperature = 15 + (now.day % 20); // Temperature between 15-35°C
-    
+
     return WeatherData(
       description: descriptions[descriptionIndex],
       temperature: temperature + 273.15, // Convert to Kelvin
@@ -114,7 +120,7 @@ class ContentService {
   }
 
   static String getRandomEncouragingWord(String language) {
-    final encouragingWords = language == 'es' 
+    final encouragingWords = language == 'es'
         ? [
             '¡Increíble!',
             '¡Fantástico!',
@@ -135,7 +141,7 @@ class ContentService {
             'Awesome!',
             'Spectacular!',
           ];
-    
+
     final now = DateTime.now();
     return encouragingWords[now.millisecond % encouragingWords.length];
   }
@@ -148,32 +154,32 @@ class ContentService {
     WeatherData? weatherData,
   }) {
     final contentList = <String>[];
-    
+
     // Always start with personal greeting
     contentList.add(getPersonalizedGreeting(profile));
-    
+
     // Add selected content types
     if (includeMotivation) {
       contentList.add(getMotivationalPhrase(profile.language));
     }
-    
+
     if (includeHoroscope) {
-      final horoscopeIntro = profile.language == 'es' 
+      final horoscopeIntro = profile.language == 'es'
           ? 'Tu horóscopo para hoy:'
           : 'Your horoscope for today:';
       contentList.add('$horoscopeIntro ${getHoroscope(profile)}');
     }
-    
+
     if (includeWeather && weatherData != null) {
       contentList.add(formatWeatherMessage(weatherData, profile.language));
     }
-    
+
     // Add encouraging closing
     final closing = profile.language == 'es'
         ? '¡Que tengas un día increíble!'
         : 'Have an amazing day!';
     contentList.add(closing);
-    
+
     return contentList;
   }
 }

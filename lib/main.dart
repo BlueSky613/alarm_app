@@ -6,11 +6,13 @@ import 'package:dawn_weaver/screens/wakeup_screen.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
 import 'package:dawn_weaver/models/alarm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Alarm.init();
+  await dotenv.load(fileName: ".env");
   final prefs = await SharedPreferences.getInstance();
   final alarms = await StorageService.getAlarms();
 

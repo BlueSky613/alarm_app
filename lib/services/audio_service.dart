@@ -50,35 +50,35 @@ class AudioService {
     await _tts.stop();
   }
 
-  static Future<void> playAlarmSound({String? soundPath}) async {
-    try {
-      if (soundPath != null && soundPath != 'default') {
-        await _audioPlayer.play(DeviceFileSource(soundPath));
-      } else {
-        // Play default alarm sound
-        await _audioPlayer.play(AssetSource('sounds/default_alarm.mp3'));
-      }
-    } catch (e) {
-      // Fallback to system notification sound if custom sound fails
-      print('Error playing alarm sound: $e');
-    }
-  }
+  // static Future<void> playAlarmSound({String? soundPath}) async {
+  //   try {
+  //     if (soundPath != null && soundPath != 'default') {
+  //       await _audioPlayer.play(DeviceFileSource(soundPath));
+  //     } else {
+  //       // Play default alarm sound
+  //       await _audioPlayer.play(AssetSource('sounds/default_alarm.mp3'));
+  //     }
+  //   } catch (e) {
+  //     // Fallback to system notification sound if custom sound fails
+  //     print('Error playing alarm sound: $e');
+  //   }
+  // }
 
-  static Future<void> stopAlarmSound() async {
-    await _audioPlayer.stop();
-  }
+  // static Future<void> stopAlarmSound() async {
+  //   await _audioPlayer.stop();
+  // }
 
-  static Future<void> pauseAlarmSound() async {
-    await _audioPlayer.pause();
-  }
+  // static Future<void> pauseAlarmSound() async {
+  //   await _audioPlayer.pause();
+  // }
 
-  static Future<void> resumeAlarmSound() async {
-    await _audioPlayer.resume();
-  }
+  // static Future<void> resumeAlarmSound() async {
+  //   await _audioPlayer.resume();
+  // }
 
-  static Future<bool> isPlaying() async {
-    return _audioPlayer.state == PlayerState.playing;
-  }
+  // static Future<bool> isPlaying() async {
+  //   return _audioPlayer.state == PlayerState.playing;
+  // }
 
   static Future<bool> isSpeaking() async {
     return await _tts.getEngines.then((_) async {
