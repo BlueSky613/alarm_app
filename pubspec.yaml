@@ -1,0 +1,35 @@
+name: dawn_weaver
+description: "Wake up to a personalized experience with this smart alarm app, greeting you by name with kind words, daily horoscopes, motivational phrases, and dynamic virtual imagery, all set to your favorite tunes."
+publish_to: "none"
+version: 1.0.0
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.1.0
+  flutter_local_notifications: ^19.0.0
+  shared_preferences: ^2.0.0
+  flutter_tts: ^4.0.0
+  audioplayers: ^6.0.0
+  lottie: ^3.0.0
+  http: ^1.0.0
+  intl: 0.20.2
+  permission_handler: ^12.0.0
+  timezone: 0.10.1
+  flutter_timezone: ^4.1.1
+  alarm: ^5.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/
