@@ -78,7 +78,7 @@ class ContentService {
               WeatherData.fromJson(data), profile.language);
         }
       }
-      final profiles = UserProfile(
+      final profiles = profile.copyWith(
         weather: weather,
         horoscope: horoscope,
       );

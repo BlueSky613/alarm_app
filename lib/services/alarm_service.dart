@@ -16,8 +16,24 @@ class AlarmService {
       FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
 
-  static Future<void> initialize() async {
+  static AlarmSettings alarmSettings = AlarmSettings(
+    id: 0,
+    dateTime: tz.TZDateTime.now(tz.local),
+    assetAudioPath: 'assets/alarm.m4a',
+    volumeSettings: VolumeSettings.fade(
+        fadeDuration: Duration(seconds: 10),
+        volumeEnforced: false,
+        volume: 0.8),
+    notificationSettings: NotificationSettings(
+        title: 'Wake up!',
+        body: 'Time to start your amazing day!',
+        stopButton: 'Stop',
+        icon: '@mipmap/ic_launcher',
+        iconColor: Colors.red),
+    loopAudio: true,
+  );
 
+  static Future<void> initialize() async {
     tz.initializeTimeZones();
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(currentTimeZone));
@@ -152,33 +168,30 @@ class AlarmService {
     DateTime scheduledDate, {
     int? notificationId,
   }) async {
-    print(
-        "Scheduling notification for alarm ${alarm.id} at $scheduledDate with id ${notificationId ?? alarm.id.hashCode}");
-
     final id = alarm.id.hashCode;
     final prefs = await SharedPreferences.getInstance();
 
-    const androidDetails = AndroidNotificationDetails(
-      'alarm_channel',
-      'Alarms',
-      channelDescription: 'Dawn Weaver alarm notifications',
-      importance: Importance.max,
-      priority: Priority.high,
-      fullScreenIntent: true,
-      category: AndroidNotificationCategory.alarm,
-    );
+    // const androidDetails = AndroidNotificationDetails(
+    //   'alarm_channel',
+    //   'Alarms',
+    //   channelDescription: 'Dawn Weaver alarm notifications',
+    //   importance: Importance.max,
+    //   priority: Priority.high,
+    //   fullScreenIntent: true,
+    //   category: AndroidNotificationCategory.alarm,
+    // );
 
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      categoryIdentifier: 'alarm_category',
-    );
+    // const iosDetails = DarwinNotificationDetails(
+    //   presentAlert: true,
+    //   presentBadge: true,
+    //   presentSound: true,
+    //   categoryIdentifier: 'alarm_category',
+    // );
 
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
+    // const details = NotificationDetails(
+    //   android: androidDetails,
+    //   iOS: iosDetails,
+    // );
 
     final title = alarm.label.isNotEmpty ? alarm.label : 'Wake up!';
     final body = 'Time to start your amazing day!';
@@ -187,10 +200,7 @@ class AlarmService {
     final tz.TZDateTime tzScheduledDate =
         tz.TZDateTime.from(scheduledDate, tz.local);
 
-    final now = tz.TZDateTime.now(tz.local);
-    final scheduledDate3 = now.add(Duration(seconds: 3));
-
-    final alarmSettings = AlarmSettings(
+    alarmSettings = AlarmSettings(
       id: id,
       dateTime: tzScheduledDate,
       assetAudioPath: 'assets/alarm.m4a',

@@ -1,3 +1,4 @@
+import 'package:dawn_weaver/screens/test_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dawn_weaver/theme.dart';
 import 'package:dawn_weaver/screens/home_screen.dart';
@@ -42,7 +43,7 @@ class DawnWeaverApp extends StatelessWidget {
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: ThemeMode.system,
-      home: const HomePage(),
+      home: const TestScreen(),
     );
   }
 }

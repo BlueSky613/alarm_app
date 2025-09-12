@@ -16,7 +16,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
 
   final Map<ZodiacSign, String> _zodiacNames = {
     ZodiacSign.aries: 'Aries',
-    ZodiacSign.taurus: 'Taurus', 
+    ZodiacSign.taurus: 'Taurus',
     ZodiacSign.gemini: 'Gemini',
     ZodiacSign.cancer: 'Cancer',
     ZodiacSign.leo: 'Leo',
@@ -92,16 +92,19 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         Text(
           'Welcome to\nDawn Weaver',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
         ),
         const SizedBox(height: 12),
         Text(
           'Let\'s personalize your wake-up experience with virtual characters, daily horoscopes, and motivational messages.',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-          ),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.7),
+              ),
         ),
       ],
     );
@@ -114,9 +117,9 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         Text(
           'What should we call you?',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -130,13 +133,19 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -159,9 +168,9 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         Text(
           'Choose your language',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
         ),
         const SizedBox(height: 16),
         Row(
@@ -181,7 +190,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
 
   Widget _buildLanguageCard(String code, String flag, String name) {
     final isSelected = _selectedLanguage == code;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -191,7 +200,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? Theme.of(context).colorScheme.primaryContainer
               : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
@@ -209,11 +218,12 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
             Text(
               name,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.onPrimaryContainer
-                    : Theme.of(context).colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        : Theme.of(context).colorScheme.onSurface,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
             ),
           ],
         ),
@@ -228,22 +238,26 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         Text(
           'Select your zodiac sign',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
         ),
         const SizedBox(height: 8),
         Text(
           'This helps us provide personalized horoscopes',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
+              ),
         ),
         const SizedBox(height: 16),
         Container(
           decoration: BoxDecoration(
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+              color:
+                  Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
             ),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -273,9 +287,13 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
                         ),
                         Text(
                           _zodiacDates[sign]!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.6),
+                                  ),
                         ),
                       ],
                     ),
@@ -331,50 +349,55 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         Text(
           'What you\'ll get:',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
         ),
         const SizedBox(height: 16),
         ...features.map((feature) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  feature['icon'] as IconData,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      feature['title'] as String,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    Text(
-                      feature['description'] as String,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
+                    child: Icon(
+                      feature['icon'] as IconData,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          feature['title'] as String,
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                        Text(
+                          feature['description'] as String,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.7),
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        )),
+            )),
       ],
     );
   }
@@ -399,9 +422,9 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         child: Text(
           'Continue',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onPrimary,
-            fontWeight: FontWeight.w600,
-          ),
+                color: Theme.of(context).colorScheme.onPrimary,
+                fontWeight: FontWeight.w600,
+              ),
         ),
       ),
     );
@@ -409,11 +432,12 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
 
   void _saveProfile() async {
     final profile = UserProfile(
-      name: _nameController.text.trim(),
-      zodiacSign: _selectedZodiacSign,
-      language: _selectedLanguage,
-      firstTimeSetup: false,
-    );
+        name: _nameController.text.trim(),
+        zodiacSign: _selectedZodiacSign,
+        language: _selectedLanguage,
+        firstTimeSetup: false,
+        horoscope: "",
+        weather: "");
 
     await StorageService.saveUserProfile(profile);
     await StorageService.setFirstRun(false);
