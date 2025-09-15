@@ -3,6 +3,9 @@ import 'package:dawn_weaver/models/alarm.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
 import 'package:dawn_weaver/services/alarm_service.dart';
 import 'package:dawn_weaver/services/content_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AddEditAlarmScreen extends StatefulWidget {
   final Alarms? alarm;
@@ -51,10 +54,32 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
     6: 'Sat',
   };
 
+  List<String> _motivationalMessages = [
+    // 'You can do it!',
+    // 'Rise and shine!',
+    // 'Make today amazing!',
+    // 'Every day is a new beginning.',
+    // 'Stay positive and strong!',
+    // 'Success starts with you!',
+  ];
+  String? _selectedMotivationalMessage;
+
   @override
   void initState() {
     super.initState();
     _initializeFromAlarm();
+    _loadMotivationalMessages();
+  }
+
+  Future<void> _loadMotivationalMessages() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String>? jsonString = prefs.getStringList('config');
+    if (jsonString != null) {
+      List<String>? messageList = jsonString;
+      _motivationalMessages = messageList;
+      setState(() {});
+    }
+    _selectedMotivationalMessage = _motivationalMessages.first;
   }
 
   void _initializeFromAlarm() {
@@ -431,6 +456,51 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
           },
         ),
         const SizedBox(height: 12),
+        if (_hasMotivation)
+          Padding(
+            padding: const EdgeInsets.only(
+                left: 8.0, top: 8.0, right: 8.0, bottom: 8.0),
+            child: DropdownButtonFormField<String>(
+              value: _selectedMotivationalMessage,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: 'Choose your motivational message',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              items: List.generate(_motivationalMessages.length, (index) {
+                final msg = _motivationalMessages[index];
+                // Alternate colors, you can customize these
+                final bgColor = index.isEven
+                    ? Theme.of(context).colorScheme.surface
+                    : Theme.of(context).colorScheme.primary.withOpacity(0.08);
+                return DropdownMenuItem(
+                  value: msg,
+                  child: Container(
+                    color: bgColor,
+                    width: double.infinity,
+                    child: Text(
+                      msg,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+              onChanged: (value) {
+                setState(() {
+                  _selectedMotivationalMessage = value;
+                });
+              },
+              dropdownColor: Theme.of(context).colorScheme.surface,
+              menuMaxHeight: 5 * 48.0,
+            ),
+          ),
+        const SizedBox(height: 12),
         _buildOptionCard(
           icon: Icons.star,
           title: 'Daily Horoscope',
@@ -735,6 +805,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
       hasWeather: _hasWeather,
       virtualCharacter: _selectedVirtualCharacter,
       snoozeMinutes: _snoozeMinutes,
+      motivationMessage: _selectedMotivationalMessage ?? 'You can do it!',
     );
     await StorageService.saveAlarm(alarm);
     await AlarmService.scheduleAlarm(alarm);

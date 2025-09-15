@@ -183,6 +183,7 @@ class ContentService {
     required bool includeWeather,
     String? weatherData,
     String? horoscope,
+    String? motivationMessage,
   }) {
     final contentList = <String>[];
 
@@ -190,8 +191,8 @@ class ContentService {
     contentList.add(getPersonalizedGreeting(profile));
 
     // Add selected content types
-    if (includeMotivation) {
-      contentList.add(getMotivationalPhrase(profile.language));
+    if (includeMotivation && motivationMessage != null) {
+      contentList.add(motivationMessage);
     }
 
     if (includeHoroscope) {

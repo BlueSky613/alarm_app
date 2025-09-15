@@ -25,6 +25,7 @@ class _WakeupScreenState extends State<WakeupScreen>
   UserProfile? _userProfile;
   String? _weatherData;
   String? _horoscope;
+  String? _motivationMessage;
   List<String> _contentList = [];
   int _currentContentIndex = 0;
   bool _isPlaying = false;
@@ -74,6 +75,10 @@ class _WakeupScreenState extends State<WakeupScreen>
   Future<void> _loadUserData() async {
     _userProfile = await StorageService.getUserProfile();
 
+    if(widget.alarm.hasMotivation) {
+      _motivationMessage = widget.alarm.motivationMessage;
+    }
+
     if (widget.alarm.hasWeather) {
       _weatherData = _userProfile!.weather;
     }
@@ -90,6 +95,7 @@ class _WakeupScreenState extends State<WakeupScreen>
         includeWeather: widget.alarm.hasWeather,
         weatherData: _weatherData,
         horoscope: _horoscope,
+        motivationMessage: _motivationMessage,
       );
 
       setState(() {});

@@ -10,6 +10,7 @@ class Alarms {
   final bool hasWeather;
   final String virtualCharacter;
   final int snoozeMinutes;
+  final String motivationMessage;
 
   Alarms({
     required this.id,
@@ -23,6 +24,7 @@ class Alarms {
     this.hasWeather = false,
     this.virtualCharacter = 'default',
     this.snoozeMinutes = 10,
+    this.motivationMessage = 'You can do it!',
   });
 
   bool get isRepeating => repeatDays.isNotEmpty;
@@ -53,6 +55,7 @@ class Alarms {
     'hasWeather': hasWeather,
     'virtualCharacter': virtualCharacter,
     'snoozeMinutes': snoozeMinutes,
+    'motivationMessage': motivationMessage,
   };
 
   factory Alarms.fromJson(Map<String, dynamic> json) => Alarms(
@@ -67,6 +70,7 @@ class Alarms {
     hasWeather: json['hasWeather'] ?? false,
     virtualCharacter: json['virtualCharacter'] ?? 'default',
     snoozeMinutes: json['snoozeMinutes'] ?? 10,
+    motivationMessage: json['motivationMessage'] ?? 'You can do it!',
   );
 
   Alarms copyWith({
@@ -81,6 +85,7 @@ class Alarms {
     bool? hasWeather,
     String? virtualCharacter,
     int? snoozeMinutes,
+    String? motivationMessage,
   }) => Alarms(
     id: id ?? this.id,
     time: time ?? this.time,
@@ -93,5 +98,6 @@ class Alarms {
     hasWeather: hasWeather ?? this.hasWeather,
     virtualCharacter: virtualCharacter ?? this.virtualCharacter,
     snoozeMinutes: snoozeMinutes ?? this.snoozeMinutes,
+    motivationMessage: motivationMessage ?? this.motivationMessage,
   );
 }
