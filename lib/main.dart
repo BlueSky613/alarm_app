@@ -18,14 +18,13 @@ void main() async {
   await dotenv.load(fileName: ".env");
   final prefs = await SharedPreferences.getInstance();
 
-  if (prefs.getStringList('config') == null) {
+  if (prefs.getString('config') == null) {
     final url = Uri.parse(
         'http://10.0.2.2:8000/api/v1/config'); // Replace with your URL
     final response = await http.get(url);
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      await prefs.setStringList(
-          'config', List<String>.from(data['motivationMessage']));
+      await prefs.setString(
+          'config', response.body);
     }
   }
 
