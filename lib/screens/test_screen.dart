@@ -1,6 +1,8 @@
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 class TestScreen extends StatefulWidget {
   const TestScreen({super.key});
@@ -14,13 +16,22 @@ class _TestScreenState extends State<TestScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset('assets/background.mp4') // or .network for online video
+    _controller = VideoPlayerController.networkUrl(Uri.parse(
+        '${dotenv.env['base_url']}/storage/virtual-images/8PdCcLhfG3paIQPSeXOhX2KLIzebYUvbet9nSfms.mp4')) // or .network for online video
       ..setLooping(true)
       ..setVolume(0)
       ..initialize().then((_) {
         setState(() {});
         _controller.play();
       });
+    // _controller = VideoPlayerController.asset(
+    //     'assets/back1.mp4') // or .network for online video
+    //   ..setLooping(true)
+    //   ..setVolume(0)
+    //   ..initialize().then((_) {
+    //     setState(() {});
+    //     _controller.play();
+    //   });
   }
 
   @override

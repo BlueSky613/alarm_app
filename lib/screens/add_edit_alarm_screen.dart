@@ -6,6 +6,8 @@ import 'package:dawn_weaver/services/content_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 class AddEditAlarmScreen extends StatefulWidget {
   final Alarms? alarm;
@@ -327,8 +329,9 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
             itemCount: _virtualCharacters.length,
             itemBuilder: (context, index) {
               final character = _virtualCharacters[index]['thumbnail'];
+              final imageUrl = _virtualCharacters[index]['image_path'];
               final characterName = _virtualCharacters[index]['name'];
-              bool isSelected = _selectedVirtualCharacter == character;
+              bool isSelected = _selectedVirtualCharacter == imageUrl;
 
               return Padding(
                 padding: const EdgeInsets.only(right: 12),
@@ -338,7 +341,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                       if (isSelected) {
                         _selectedVirtualCharacter = 'default';
                       } else {
-                        _selectedVirtualCharacter = character;
+                        _selectedVirtualCharacter = imageUrl;
                       }
                       isSelected = !isSelected;
                     });
@@ -364,7 +367,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                             borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(10)),
                             child: Image.network(
-                              "http://10.0.2.2:8000/storage/thumbnails/8PdCcLhfG3paIQPSeXOhX2KLIzebYUvbet9nSfms.png",
+                              "${dotenv.env['base_url']}/storage/$character",
                               width: 120,
                               fit: BoxFit.cover,
                               // errorBuilder: (context, error, stackTrace) {

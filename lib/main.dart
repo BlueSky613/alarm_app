@@ -9,7 +9,6 @@ import 'package:dawn_weaver/models/alarm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
@@ -20,11 +19,10 @@ void main() async {
 
   if (prefs.getString('config') == null) {
     final url = Uri.parse(
-        'http://10.0.2.2:8000/api/v1/config'); // Replace with your URL
+        '${dotenv.env['base_url']}/api/v1/config'); // Replace with your URL
     final response = await http.get(url);
     if (response.statusCode == 200) {
-      await prefs.setString(
-          'config', response.body);
+      await prefs.setString('config', response.body);
     }
   }
 

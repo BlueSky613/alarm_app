@@ -9,6 +9,9 @@ import 'package:dawn_weaver/services/audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dawn_weaver/services/alarm_service.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
+import 'package:video_player/video_player.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class WakeupScreen extends StatefulWidget {
   final Alarms alarm;
@@ -26,6 +29,7 @@ class _WakeupScreenState extends State<WakeupScreen>
   String? _weatherData;
   String? _horoscope;
   String? _motivationMessage;
+  String audioString = "";
   List<String> _contentList = [];
   int _currentContentIndex = 0;
   bool _isPlaying = false;
@@ -33,6 +37,7 @@ class _WakeupScreenState extends State<WakeupScreen>
   late AnimationController _fadeController;
   late Animation<double> _pulseAnimation;
   late Animation<double> _fadeAnimation;
+  late VideoPlayerController _controller;
 
   @override
   void initState() {
@@ -75,7 +80,20 @@ class _WakeupScreenState extends State<WakeupScreen>
   Future<void> _loadUserData() async {
     _userProfile = await StorageService.getUserProfile();
 
-    if(widget.alarm.hasMotivation) {
+    if (widget.alarm.virtualCharacter != 'default') {
+      print(widget.alarm.virtualCharacter);
+
+      _controller = VideoPlayerController.networkUrl(Uri.parse(
+          "${dotenv.env['base_url']}/storage/${widget.alarm.virtualCharacter}")) // or .network for online video
+        ..setLooping(true)
+        ..setVolume(0)
+        ..initialize().then((_) {
+          setState(() {});
+          _controller.play();
+        });
+    }
+
+    if (widget.alarm.hasMotivation) {
       _motivationMessage = widget.alarm.motivationMessage;
     }
 
@@ -120,28 +138,13 @@ class _WakeupScreenState extends State<WakeupScreen>
 
   void _speakCurrentContent() async {
     if (_currentContentIndex < _contentList.length) {
+      for (var i = 0; i < _contentList.length; i++) {
+        audioString += _contentList[i];
+      }
       await AudioService.speakGreeting(
-        _contentList[_currentContentIndex],
+        audioString,
         language: _userProfile?.language ?? 'en',
       );
-    }
-  }
-
-  void _nextContent() {
-    if (_currentContentIndex < _contentList.length - 1) {
-      setState(() {
-        _currentContentIndex++;
-      });
-      _speakCurrentContent();
-    }
-  }
-
-  void _previousContent() {
-    if (_currentContentIndex > 0) {
-      setState(() {
-        _currentContentIndex--;
-      });
-      _speakCurrentContent();
     }
   }
 
@@ -182,28 +185,208 @@ class _WakeupScreenState extends State<WakeupScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF1a1a2e),
-              Color(0xFF16213e),
-              Color(0xFF0f3460),
+      body: Stack(
+        children: [
+          // Video background
+          if (widget.alarm.virtualCharacter != 'default' &&
+              _controller.value.isInitialized)
+            SizedBox.expand(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _controller.value.size.width,
+                  height: _controller.value.size.height,
+                  child: VideoPlayer(_controller),
+                ),
+              ),
+            )
+          else
+            Container(
+              color: Colors.black,
+            ),
+          // Main content
+          SafeArea(
+              child: Center(
+            child: Column(
+              children: [
+                const SizedBox(height: 32),
+                widget.alarm.label.isNotEmpty
+                    ? Text(
+                        widget.alarm.label,
+                        style: GoogleFonts.orbitron(
+                          color: Colors.cyanAccent,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                        ),
+                      )
+                    : Text(
+                        'ALARM',
+                        style: GoogleFonts.orbitron(
+                          color: Colors.cyanAccent,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 4,
+                        ),
+                      ),
+                const SizedBox(height: 16),
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Text(
+                    TimeOfDay.now().format(context),
+                    style: GoogleFonts.orbitron(
+                      color: Colors.cyanAccent,
+                      fontSize: 70,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    _buildNeonButton(
+                      label: 'Snooze ${widget.alarm.snoozeMinutes}m',
+                      color: Colors.blueAccent.shade200,
+                      icon: Icons.snooze,
+                      onTap: _snoozeAlarm,
+                    ),
+                    const SizedBox(width: 16),
+                    _buildNeonButton(
+                      label: 'I\'m Awake!',
+                      color: Colors.tealAccent.shade200,
+                      icon: Icons.check,
+                      onTap: _dismissAlarm,
+                    ),
+                  ],
+                )
+                // Row(
+                //   children: [
+                //     Expanded(
+                //       child: ElevatedButton(
+                //         onPressed: _snoozeAlarm,
+                //         style: ElevatedButton.styleFrom(
+                //           backgroundColor: Colors.orange,
+                //           foregroundColor: Colors.white,
+                //           padding: const EdgeInsets.symmetric(vertical: 16),
+                //           shape: RoundedRectangleBorder(
+                //             borderRadius: BorderRadius.circular(12),
+                //           ),
+                //         ),
+                //         child: Row(
+                //           mainAxisAlignment: MainAxisAlignment.center,
+                //           children: [
+                //             const Icon(Icons.snooze),
+                //             const SizedBox(width: 8),
+                //             Text('Snooze ${widget.alarm.snoozeMinutes}m'),
+                //           ],
+                //         ),
+                //       ),
+                //     ),
+                //     const SizedBox(width: 16),
+                //     Expanded(
+                //       child: ElevatedButton(
+                //         onPressed: _dismissAlarm,
+                //         style: ElevatedButton.styleFrom(
+                //           backgroundColor: Colors.green,
+                //           foregroundColor: Colors.white,
+                //           padding: const EdgeInsets.symmetric(vertical: 16),
+                //           shape: RoundedRectangleBorder(
+                //             borderRadius: BorderRadius.circular(12),
+                //           ),
+                //         ),
+                //         child: const Row(
+                //           mainAxisAlignment: MainAxisAlignment.center,
+                //           children: [
+                //             Icon(Icons.check),
+                //             SizedBox(width: 8),
+                //             Text('I\'m Awake!'),
+                //           ],
+                //         ),
+                //       ),
+                //     ),
+                //   ],
+                // )
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+    // return Scaffold(
+    //   backgroundColor: Colors.black,
+    //   body: Container(
+    //     decoration: const BoxDecoration(
+    //       gradient: LinearGradient(
+    //         begin: Alignment.topCenter,
+    //         end: Alignment.bottomCenter,
+    //         colors: [
+    //           Color(0xFF1a1a2e),
+    //           Color(0xFF16213e),
+    //           Color(0xFF0f3460),
+    //         ],
+    //       ),
+    //     ),
+    //     child: SafeArea(
+    //       child: Column(
+    //         children: [
+    //           _buildHeader(),
+    //           Expanded(
+    //             child: _buildVirtualCharacterSection(),
+    //           ),
+    //           _buildControls(),
+    //         ],
+    //       ),
+    //     ),
+    //   ),
+    // );
+  }
+
+  Widget _buildNeonButton({
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+    IconData? icon,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 52,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withOpacity(0.9), width: 2.2),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.25),
+                blurRadius: 10,
+                spreadRadius: 4,
+              ),
+              BoxShadow(
+                color: color.withOpacity(0.08),
+                blurRadius: 6,
+                spreadRadius: 1,
+              ),
             ],
           ),
-        ),
-        child: SafeArea(
-          child: Column(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildHeader(),
-              Expanded(
-                child: _buildVirtualCharacterSection(),
+              if (icon != null) ...[
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                label.toUpperCase(),
+                style: GoogleFonts.orbitron(
+                  color: color,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
               ),
-              _buildContentSection(),
-              _buildControls(),
             ],
           ),
         ),
@@ -324,104 +507,104 @@ class _WakeupScreenState extends State<WakeupScreen>
     );
   }
 
-  Widget _buildContentSection() {
-    if (_contentList.isEmpty) return const SizedBox();
+  // Widget _buildContentSection() {
+  //   if (_contentList.isEmpty) return const SizedBox();
 
-    return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                onPressed: _currentContentIndex > 0 ? _previousContent : null,
-                icon: Icon(
-                  Icons.chevron_left,
-                  color:
-                      _currentContentIndex > 0 ? Colors.white : Colors.white38,
-                  size: 28,
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${_currentContentIndex + 1} of ${_contentList.length}',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _currentContentIndex == 2 && _contentList.length > 3
-                        ? SizedBox(
-                            height:
-                                150, // Adjust as needed to fit inside the 160 container
-                            child: SingleChildScrollView(
-                              child: Text(
-                                _currentContentIndex < _contentList.length
-                                    ? _contentList[_currentContentIndex]
-                                    : '',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          )
-                        : Text(
-                            _currentContentIndex < _contentList.length
-                                ? _contentList[_currentContentIndex]
-                                : '',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.white,
-                              height: 1.4,
-                            ),
-                          ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: _currentContentIndex < _contentList.length - 1
-                    ? _nextContent
-                    : null,
-                icon: Icon(
-                  Icons.chevron_right,
-                  color: _currentContentIndex < _contentList.length - 1
-                      ? Colors.white
-                      : Colors.white38,
-                  size: 28,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          LinearProgressIndicator(
-            value: _contentList.isNotEmpty
-                ? (_currentContentIndex + 1) / _contentList.length
-                : 0,
-            backgroundColor: Colors.white.withValues(alpha: 0.2),
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
+  //   return Container(
+  //     margin: const EdgeInsets.all(20),
+  //     padding: const EdgeInsets.all(20),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white.withValues(alpha: 0.1),
+  //       borderRadius: BorderRadius.circular(16),
+  //       border: Border.all(
+  //         color: Colors.white.withValues(alpha: 0.2),
+  //       ),
+  //     ),
+  //     child: Column(
+  //       children: [
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             IconButton(
+  //               onPressed: _currentContentIndex > 0 ? _previousContent : null,
+  //               icon: Icon(
+  //                 Icons.chevron_left,
+  //                 color:
+  //                     _currentContentIndex > 0 ? Colors.white : Colors.white38,
+  //                 size: 28,
+  //               ),
+  //             ),
+  //             Expanded(
+  //               child: Column(
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 crossAxisAlignment: CrossAxisAlignment.center,
+  //                 children: [
+  //                   Text(
+  //                     '${_currentContentIndex + 1} of ${_contentList.length}',
+  //                     style: const TextStyle(
+  //                       color: Colors.white70,
+  //                       fontSize: 12,
+  //                     ),
+  //                   ),
+  //                   const SizedBox(height: 8),
+  //                   _currentContentIndex == 2 && _contentList.length > 3
+  //                       ? SizedBox(
+  //                           height:
+  //                               150, // Adjust as needed to fit inside the 160 container
+  //                           child: SingleChildScrollView(
+  //                             child: Text(
+  //                               _currentContentIndex < _contentList.length
+  //                                   ? _contentList[_currentContentIndex]
+  //                                   : '',
+  //                               textAlign: TextAlign.center,
+  //                               style: const TextStyle(
+  //                                 fontSize: 16,
+  //                                 color: Colors.white,
+  //                                 height: 1.4,
+  //                               ),
+  //                             ),
+  //                           ),
+  //                         )
+  //                       : Text(
+  //                           _currentContentIndex < _contentList.length
+  //                               ? _contentList[_currentContentIndex]
+  //                               : '',
+  //                           textAlign: TextAlign.center,
+  //                           style: const TextStyle(
+  //                             fontSize: 16,
+  //                             color: Colors.white,
+  //                             height: 1.4,
+  //                           ),
+  //                         ),
+  //                 ],
+  //               ),
+  //             ),
+  //             IconButton(
+  //               onPressed: _currentContentIndex < _contentList.length - 1
+  //                   ? _nextContent
+  //                   : null,
+  //               icon: Icon(
+  //                 Icons.chevron_right,
+  //                 color: _currentContentIndex < _contentList.length - 1
+  //                     ? Colors.white
+  //                     : Colors.white38,
+  //                 size: 28,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 16),
+  //         LinearProgressIndicator(
+  //           value: _contentList.isNotEmpty
+  //               ? (_currentContentIndex + 1) / _contentList.length
+  //               : 0,
+  //           backgroundColor: Colors.white.withValues(alpha: 0.2),
+  //           valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildControls() {
     return Container(
@@ -549,4 +732,3 @@ class _WakeupScreenState extends State<WakeupScreen>
     super.dispose();
   }
 }
-
