@@ -8,7 +8,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-
 class AddEditAlarmScreen extends StatefulWidget {
   final Alarms? alarm;
 
@@ -787,7 +786,6 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
       barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
-
     final userProfile = await StorageService.getUserProfile();
     final now = DateTime.now();
     final alarmDateTime = DateTime(
@@ -798,8 +796,11 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
       _selectedTime.minute,
     );
 
+    print("hasHoroscope: $_hasHoroscope, hasWeather: $_hasWeather");
+    print('alarm_${DateTime.now().millisecondsSinceEpoch}');
+
     final alarm = Alarms(
-      id: widget.alarm?.id ?? 'alarm_${DateTime.now().millisecondsSinceEpoch}',
+      id: 'alarm_${DateTime.now().millisecondsSinceEpoch}',
       time: alarmDateTime,
       label: _labelController.text.trim(),
       repeatDays: _repeatDays,
@@ -810,14 +811,25 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
       snoozeMinutes: _snoozeMinutes,
       motivationMessage: _selectedMotivationalMessage ?? 'You can do it!',
     );
-    await StorageService.saveAlarm(alarm);
-    await AlarmService.scheduleAlarm(alarm);
-    if (_hasHoroscope == true || _hasWeather == true) {
-      await ContentService.getHoroscopeWeather(userProfile!);
-    }
-    if (mounted) {
-      Navigator.of(context).pop(); // dismiss progress dialog
-      Navigator.of(context).pop(); // pop screen
+
+    try {
+      await StorageService.saveAlarm(alarm);
+      await AlarmService.scheduleAlarm(alarm);
+      if (_hasHoroscope == true || _hasWeather == true) {
+        await ContentService.getHoroscopeWeather(userProfile!);
+      }
+      if (mounted) {
+        Navigator.of(context).pop(); // dismiss progress dialog
+        Navigator.of(context).pop(); // pop screen
+      }
+    } catch (e) {
+      if (_hasHoroscope == true || _hasWeather == true) {
+        await ContentService.getHoroscopeWeather(userProfile!);
+      }
+      if (mounted) {
+        Navigator.of(context).pop(); // dismiss progress dialog
+        Navigator.of(context).pop(); // pop screen
+      }
     }
   }
 

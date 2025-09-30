@@ -11,29 +11,30 @@ class StorageService {
   static Future<List<Alarms>> getAlarms() async {
     final prefs = await SharedPreferences.getInstance();
     final alarmsJson = prefs.getStringList(_alarmsKey) ?? [];
-    
-    return alarmsJson
-        .map((json) => Alarms.fromJson(jsonDecode(json)))
-        .toList()
+
+    return alarmsJson.map((json) => Alarms.fromJson(jsonDecode(json))).toList()
       ..sort((a, b) => a.time.compareTo(b.time));
   }
 
   static Future<void> saveAlarms(List<Alarms> alarms) async {
     final prefs = await SharedPreferences.getInstance();
-    final alarmsJson = alarms.map((alarm) => jsonEncode(alarm.toJson())).toList();
+    final alarmsJson =
+        alarms.map((alarm) => jsonEncode(alarm.toJson())).toList();
     await prefs.setStringList(_alarmsKey, alarmsJson);
   }
 
   static Future<void> saveAlarm(Alarms alarm) async {
     final alarms = await getAlarms();
     final index = alarms.indexWhere((a) => a.id == alarm.id);
-    
+
+    print("index: $index");
+    print("alarm: ${alarm.toJson()}");
     if (index >= 0) {
       alarms[index] = alarm;
     } else {
       alarms.add(alarm);
     }
-    
+
     await saveAlarms(alarms);
   }
 
@@ -46,9 +47,9 @@ class StorageService {
   static Future<UserProfile?> getUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
     final profileJson = prefs.getString(_userProfileKey);
-    
+
     if (profileJson == null) return null;
-    
+
     return UserProfile.fromJson(jsonDecode(profileJson));
   }
 

@@ -118,7 +118,7 @@ class _HomePageState extends State<HomePage> {
 
     final difference = alarmTime.difference(now);
     final hours = difference.inHours;
-    final minutes = difference.inMinutes % 60;
+    final minutes = difference.inMinutes % 60 + 1;
 
     if (hours == 0) {
       return '${minutes}m';

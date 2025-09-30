@@ -67,16 +67,18 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
                       itemCount: _alarms.length,
                       itemBuilder: (context, index) {
                         final alarm = _alarms[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: AlarmCard(
-                            alarm: alarm,
-                            onToggle: (isActive) =>
-                                _toggleAlarm(alarm.id, isActive),
-                            onEdit: () => _editAlarm(alarm),
-                            onDelete: () => _deleteAlarm(alarm.id),
-                          ),
-                        );
+                        return alarm.id.contains('quick') == false
+                            ? Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: AlarmCard(
+                                  alarm: alarm,
+                                  onToggle: (isActive) =>
+                                      _toggleAlarm(alarm.id, isActive),
+                                  onEdit: () => _editAlarm(alarm),
+                                  onDelete: () => _deleteAlarm(alarm.id),
+                                ),
+                              )
+                            : const SizedBox.shrink();
                       },
                     ),
                   ),
@@ -152,8 +154,11 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
   }
 
   Widget _buildStatsCard() {
-    final activeAlarms = _alarms.where((alarm) => alarm.isActive).length;
-    final inactiveAlarms = _alarms.length - activeAlarms;
+    final quickAlarms =
+        _alarms.where((alarm) => alarm.id.contains('quick')).length;
+    final activeAlarms =
+        _alarms.where((alarm) => alarm.isActive).length - quickAlarms;
+    final inactiveAlarms = _alarms.length - activeAlarms - quickAlarms;
 
     return Container(
       width: double.infinity,
@@ -175,7 +180,7 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem('Total', _alarms.length.toString()),
+          _buildStatItem('Total', (_alarms.length - quickAlarms).toString()),
           Container(
             height: 40,
             width: 1,

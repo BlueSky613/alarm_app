@@ -56,6 +56,31 @@ class AlarmService {
       android: androidSettings,
       iOS: iosSettings,
     );
+    Alarm.ringStream.stream.listen((alarmSettings) async {
+      try {
+        final alarms = await StorageService.getAlarms();
+        Alarms? alarm;
+        try {
+          alarm = alarms.firstWhere((a) => a.id.hashCode == alarmSettings.id);
+        } catch (e) {
+          // not found
+          alarm = null;
+        }
+
+        if (alarm != null) {
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (context) =>
+                  WakeupScreen(alarm: alarm!, id: alarmSettings.id),
+            ),
+          );
+        } else {
+          debugPrint('Wakeup: alarm not found for id=${alarmSettings.id}');
+        }
+      } catch (e) {
+        debugPrint('Error handling ringStream: $e');
+      }
+    });
 
     // await _notifications.initialize(
     //   initSettings,
@@ -201,7 +226,7 @@ class AlarmService {
         tz.TZDateTime.from(scheduledDate, tz.local);
 
     alarmSettings = AlarmSettings(
-      id: id,
+      id: notificationId ?? id,
       dateTime: tzScheduledDate,
       assetAudioPath: 'assets/alarm.m4a',
       volumeSettings: VolumeSettings.fade(
@@ -221,14 +246,6 @@ class AlarmService {
 
     prefs.setInt('alarmActive', id);
 
-    Alarm.ringStream.stream.listen((AlarmSettings alarmSettings) {
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (context) => WakeupScreen(alarm: alarm, id: id),
-        ),
-      );
-    });
-
     // await _notifications.zonedSchedule(
     //   id,
     //   title,
@@ -242,7 +259,7 @@ class AlarmService {
 
   static Future<void> cancelAlarm(String alarmId) async {
     // Cancel all possible notifications for this alarm (including repeating ones)
-    await Alarm.stopAll();
+    await Alarm.stop(alarmId.hashCode);
   }
 
   static Future<void> snoozeAlarm(String alarmId, int minutes) async {

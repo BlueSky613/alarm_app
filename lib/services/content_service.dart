@@ -190,6 +190,8 @@ class ContentService {
     // Always start with personal greeting
     contentList.add(getPersonalizedGreeting(profile));
 
+    print("horoscope: $includeHoroscope, motivation: $includeMotivation, weather: $includeWeather");
+
     // Add selected content types
     if (includeMotivation && motivationMessage != null) {
       contentList.add(motivationMessage);
