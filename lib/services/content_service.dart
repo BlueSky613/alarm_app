@@ -35,10 +35,8 @@ class WeatherData {
 
 class ContentService {
   static String _weatherApiKey = dotenv.env['weather_api_key'] ?? '';
-  static const String _weatherBaseUrl =
-      'https://api.openweathermap.org/data/2.5/weather';
-  static const String _horoscopeBaseUrl =
-      'https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily';
+  static String _weatherBaseUrl = dotenv.env['weather_base_url'] ?? '';
+  static String _horoscopeBaseUrl = dotenv.env['horoscope_base_url'] ?? '';
 
   static WakeupContent getContent(String language) {
     return language == 'es'
@@ -88,59 +86,6 @@ class ContentService {
     }
   }
 
-  // static Future<WeatherData?> getWeatherData(UserProfile profile) async {
-  //   try {
-  //     String url;
-  //     final location = await LocationService.getCurrentPosition();
-  //     if (location != null) {
-  //       url =
-  //           '$_weatherBaseUrl?lat=${location.latitude}&lon=${location.longitude}&appid=$_weatherApiKey';
-  //       final response = await http.get(Uri.parse(url));
-  //       if (response.statusCode == 200) {
-  //         final data = json.decode(response.body);
-  //         final profiles = UserProfile(
-  //           weather: formatWeatherMessage(
-  //               WeatherData.fromJson(data), profile.language),
-  //         );
-  //         await StorageService.saveUserProfile(profiles);
-  //         return WeatherData.fromJson(data);
-  //       }
-  //     } else {
-  //       // Default to a sample city if no location provided
-  //       return _getSampleWeatherData();
-  //     }
-  //   } catch (e) {
-  //     print('Error fetching weather data: $e');
-  //   }
-
-  //   // Return sample weather data if API fails
-  //   return _getSampleWeatherData();
-  // }
-
-  // static WeatherData _getSampleWeatherData() {
-  //   final descriptions = [
-  //     'Sunny and bright',
-  //     'Partly cloudy',
-  //     'Light rain',
-  //     'Clear skies',
-  //     'Overcast',
-  //     'Warm and pleasant',
-  //     'Cool and crisp',
-  //     'Perfect weather',
-  //   ];
-
-  //   final now = DateTime.now();
-  //   final descriptionIndex = now.day % descriptions.length;
-  //   final temperature = 15 + (now.day % 20); // Temperature between 15-35°C
-
-  //   return WeatherData(
-  //     description: descriptions[descriptionIndex],
-  //     temperature: temperature + 273.15, // Convert to Kelvin
-  //     location: 'Your City',
-  //     icon: '01d',
-  //   );
-  // }
-
   static String formatWeatherMessage(WeatherData weather, String language) {
     if (language == 'es') {
       return 'El clima hoy en ${weather.location}: ${weather.description}, ${weather.temperatureCelsius}';
@@ -189,8 +134,6 @@ class ContentService {
 
     // Always start with personal greeting
     contentList.add(getPersonalizedGreeting(profile));
-
-    print("horoscope: $includeHoroscope, motivation: $includeMotivation, weather: $includeWeather");
 
     // Add selected content types
     if (includeMotivation && motivationMessage != null) {

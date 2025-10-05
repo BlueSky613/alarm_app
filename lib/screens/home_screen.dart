@@ -221,7 +221,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildTimeDisplay() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Column(
         children: [
           Text(

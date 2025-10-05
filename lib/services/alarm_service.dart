@@ -45,17 +45,6 @@ class AlarmService {
 
     await _requestPermissions();
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
-      requestSoundPermission: true,
-      requestBadgePermission: true,
-      requestAlertPermission: true,
-    );
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
     Alarm.ringStream.stream.listen((alarmSettings) async {
       try {
         final alarms = await StorageService.getAlarms();
@@ -82,11 +71,6 @@ class AlarmService {
       }
     });
 
-    // await _notifications.initialize(
-    //   initSettings,
-    //   onDidReceiveNotificationResponse: _onNotificationResponse,
-    // );
-
     _initialized = true;
   }
 
@@ -98,27 +82,6 @@ class AlarmService {
       await Permission.scheduleExactAlarm.request();
     }
   }
-
-  // static void _onNotificationResponse(NotificationResponse response) async {
-  //   // Try to get the alarm id from the payload
-
-  //   print("Notification Response: ${response.payload}");
-
-  //   final alarmId = response.payload;
-  //   if (alarmId == null) return;
-  //   final alarms = await StorageService.getAlarms();
-  //   Alarms? alarm;
-  //   try {
-  //     alarm = alarms.firstWhere((a) => a.id == alarmId);
-  //   } catch (_) {
-  //     return;
-  //   }
-  //   navigatorKey.currentState?.push(
-  //     MaterialPageRoute(
-  //       builder: (context) => WakeupScreen(alarm: alarm!),
-  //     ),
-  //   );
-  // }
 
   static Future<void> scheduleAlarm(Alarms alarm) async {
     await initialize();
@@ -196,28 +159,6 @@ class AlarmService {
     final id = alarm.id.hashCode;
     final prefs = await SharedPreferences.getInstance();
 
-    // const androidDetails = AndroidNotificationDetails(
-    //   'alarm_channel',
-    //   'Alarms',
-    //   channelDescription: 'Dawn Weaver alarm notifications',
-    //   importance: Importance.max,
-    //   priority: Priority.high,
-    //   fullScreenIntent: true,
-    //   category: AndroidNotificationCategory.alarm,
-    // );
-
-    // const iosDetails = DarwinNotificationDetails(
-    //   presentAlert: true,
-    //   presentBadge: true,
-    //   presentSound: true,
-    //   categoryIdentifier: 'alarm_category',
-    // );
-
-    // const details = NotificationDetails(
-    //   android: androidDetails,
-    //   iOS: iosDetails,
-    // );
-
     final title = alarm.label.isNotEmpty ? alarm.label : 'Wake up!';
     final body = 'Time to start your amazing day!';
 
@@ -246,15 +187,6 @@ class AlarmService {
 
     prefs.setInt('alarmActive', id);
 
-    // await _notifications.zonedSchedule(
-    //   id,
-    //   title,
-    //   body,
-    //   scheduledDate3,
-    //   details,
-    //   androidScheduleMode: AndroidScheduleMode.alarmClock,
-    //   payload: alarm.id,
-    // );
   }
 
   static Future<void> cancelAlarm(String alarmId) async {

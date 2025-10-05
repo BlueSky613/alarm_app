@@ -5,7 +5,6 @@ import 'package:dawn_weaver/services/alarm_service.dart';
 import 'package:dawn_weaver/services/content_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AddEditAlarmScreen extends StatefulWidget {
@@ -29,15 +28,6 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
 
   List<dynamic> _virtualCharacters = [];
 
-  final List<String> _characterNames = [
-    'Virtual Assistant',
-    'Friendly Robot',
-    'Anime Girl',
-    'Cute Animal',
-    'Space Girl',
-    'Digital Avatar',
-  ];
-
   final Map<int, String> _dayNames = {
     0: 'Sun',
     1: 'Mon',
@@ -48,14 +38,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
     6: 'Sat',
   };
 
-  List<String> _motivationalMessages = [
-    // 'You can do it!',
-    // 'Rise and shine!',
-    // 'Make today amazing!',
-    // 'Every day is a new beginning.',
-    // 'Stay positive and strong!',
-    // 'Success starts with you!',
-  ];
+  List<String> _motivationalMessages = [];
   String? _selectedMotivationalMessage;
 
   @override
@@ -254,7 +237,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                 child: Center(
                   child: Text(
                     dayName,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: isSelected
                               ? Theme.of(context).colorScheme.onPrimary
                               : Theme.of(context).colorScheme.onSurface,
@@ -795,9 +778,6 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
       _selectedTime.hour,
       _selectedTime.minute,
     );
-
-    print("hasHoroscope: $_hasHoroscope, hasWeather: $_hasWeather");
-    print('alarm_${DateTime.now().millisecondsSinceEpoch}');
 
     final alarm = Alarms(
       id: 'alarm_${DateTime.now().millisecondsSinceEpoch}',
