@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:elevenlabs_flutter/elevenlabs_flutter.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:dawn_weaver/l10n/app_localizations.dart';
 
 class TestScreen extends StatefulWidget {
   const TestScreen({super.key});
@@ -52,7 +53,7 @@ class _TestScreenState extends State<TestScreen> with TickerProviderStateMixin {
                 children: [
                   const SizedBox(height: 32),
                   Text(
-                    'ALARM',
+                    AppLocalizations.of(context).alarms.toUpperCase(),
                     style: GoogleFonts.orbitron(
                       color: Colors.cyanAccent,
                       fontSize: 32,
@@ -71,7 +72,7 @@ class _TestScreenState extends State<TestScreen> with TickerProviderStateMixin {
                     ),
                   ),
                   Text(
-                    'PM',
+                    AppLocalizations.of(context).pm,
                     style: GoogleFonts.orbitron(
                       color: Colors.cyanAccent,
                       fontSize: 28,

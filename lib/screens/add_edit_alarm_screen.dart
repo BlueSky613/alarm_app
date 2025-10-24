@@ -3,6 +3,7 @@ import 'package:dawn_weaver/models/alarm.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
 import 'package:dawn_weaver/services/alarm_service.dart';
 import 'package:dawn_weaver/services/content_service.dart';
+import 'package:dawn_weaver/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -28,15 +29,18 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
 
   List<dynamic> _virtualCharacters = [];
 
-  final Map<int, String> _dayNames = {
-    0: 'Sun',
-    1: 'Mon',
-    2: 'Tue',
-    3: 'Wed',
-    4: 'Thu',
-    5: 'Fri',
-    6: 'Sat',
-  };
+  Map<int, String> get _dayNames {
+    final l10n = AppLocalizations.of(context);
+    return {
+      0: l10n.sun,
+      1: l10n.mon,
+      2: l10n.tue,
+      3: l10n.wed,
+      4: l10n.thu,
+      5: l10n.fri,
+      6: l10n.sat,
+    };
+  }
 
   List<String> _motivationalMessages = [];
   String? _selectedMotivationalMessage;
@@ -81,14 +85,16 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Text(widget.alarm != null ? 'Edit Alarm' : 'New Alarm'),
+        title: Text(widget.alarm != null
+            ? AppLocalizations.of(context).editAlarm
+            : AppLocalizations.of(context).addAlarm),
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         actions: [
           TextButton(
             onPressed: _saveAlarm,
             child: Text(
-              'Save',
+              AppLocalizations.of(context).save,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.w600,
@@ -122,11 +128,12 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
   }
 
   Widget _buildTimeSelector() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Alarm Time',
+          l10n.selectTime,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -162,11 +169,12 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
   }
 
   Widget _buildLabelInput() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Alarm Label (Optional)',
+          l10n.alarmLabel,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -175,7 +183,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         TextField(
           controller: _labelController,
           decoration: InputDecoration(
-            hintText: 'e.g., Morning Workout, Work Day',
+            hintText: l10n.enterLabel,
             prefixIcon: Icon(
               Icons.label_outline,
               color: Theme.of(context).colorScheme.primary,
@@ -190,11 +198,12 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
   }
 
   Widget _buildRepeatDays() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Repeat',
+          l10n.repeat,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -259,7 +268,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                   _repeatDays = {1, 2, 3, 4, 5}; // Weekdays
                 });
               },
-              child: const Text('Weekdays'),
+              child: Text(l10n.isSpanish ? 'Días laborales' : 'Weekdays'),
             ),
             TextButton(
               onPressed: () {
@@ -267,7 +276,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                   _repeatDays = {0, 6}; // Weekends
                 });
               },
-              child: const Text('Weekends'),
+              child: Text(l10n.isSpanish ? 'Fines de semana' : 'Weekends'),
             ),
             TextButton(
               onPressed: () {
@@ -275,7 +284,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                   _repeatDays = {0, 1, 2, 3, 4, 5, 6}; // Every day
                 });
               },
-              child: const Text('Daily'),
+              child: Text(l10n.isSpanish ? 'Diario' : 'Daily'),
             ),
           ],
         ),
@@ -284,18 +293,21 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
   }
 
   Widget _buildVirtualCharacterSelection() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Virtual Character',
+          l10n.virtualCharacter,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Choose who will greet you when you wake up',
+          l10n.isSpanish
+              ? 'Elige quién te saludará cuando despiertes'
+              : 'Choose who will greet you when you wake up',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context)
                     .colorScheme
@@ -409,18 +421,21 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
   }
 
   Widget _buildWakeupOptions() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Wake-up Content',
+          l10n.isSpanish ? 'Contenido de despertar' : 'Wake-up Content',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Choose what content to include when you wake up',
+          l10n.isSpanish
+              ? 'Elige qué contenido incluir cuando despiertes'
+              : 'Choose what content to include when you wake up',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context)
                     .colorScheme
@@ -431,8 +446,10 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         const SizedBox(height: 16),
         _buildOptionCard(
           icon: Icons.lightbulb_outline,
-          title: 'Motivational Messages',
-          subtitle: 'Inspiring phrases to start your day',
+          title: l10n.motivationalMessage,
+          subtitle: l10n.isSpanish
+              ? 'Frases inspiradoras para comenzar tu día'
+              : 'Inspiring phrases to start your day',
           value: _hasMotivation,
           onChanged: (value) {
             setState(() {
@@ -449,7 +466,9 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
               value: _selectedMotivationalMessage,
               isExpanded: true,
               decoration: InputDecoration(
-                labelText: 'Choose your motivational message',
+                labelText: l10n.isSpanish
+                    ? 'Elige tu mensaje motivacional'
+                    : 'Choose your motivational message',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -488,8 +507,10 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         const SizedBox(height: 12),
         _buildOptionCard(
           icon: Icons.star,
-          title: 'Daily Horoscope',
-          subtitle: 'Personalized horoscope based on your zodiac sign',
+          title: l10n.horoscope,
+          subtitle: l10n.isSpanish
+              ? 'Horóscopo personalizado basado en tu signo zodiacal'
+              : 'Personalized horoscope based on your zodiac sign',
           value: _hasHoroscope,
           onChanged: (value) {
             setState(() {
@@ -500,8 +521,10 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         const SizedBox(height: 12),
         _buildOptionCard(
           icon: Icons.cloud,
-          title: 'Weather Update',
-          subtitle: 'Current weather information',
+          title: l10n.weatherInfo,
+          subtitle: l10n.isSpanish
+              ? 'Información actual del clima'
+              : 'Current weather information',
           value: _hasWeather,
           onChanged: (value) {
             setState(() {
@@ -594,11 +617,12 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
   }
 
   Widget _buildSnoozeSettings() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Snooze Duration',
+          l10n.isSpanish ? 'Duración de posponer' : 'Snooze Duration',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -655,6 +679,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
   }
 
   Widget _buildPreviewCard() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -683,7 +708,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Alarm Preview',
+                l10n.isSpanish ? 'Vista previa de alarma' : 'Alarm Preview',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onPrimaryContainer,
                       fontWeight: FontWeight.w600,
@@ -693,7 +718,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Time: ${_selectedTime.format(context)}',
+            '${l10n.time}: ${_selectedTime.format(context)}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
@@ -701,7 +726,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
           if (_labelController.text.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              'Label: ${_labelController.text}',
+              '${l10n.label}: ${_labelController.text}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
@@ -709,14 +734,14 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
           ],
           const SizedBox(height: 4),
           Text(
-            'Repeat: ${_getRepeatString()}',
+            '${l10n.repeat}: ${_getRepeatString()}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Content: ${_getContentString()}',
+            '${l10n.isSpanish ? 'Contenido' : 'Content'}: ${_getContentString()}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
@@ -727,27 +752,32 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
   }
 
   String _getRepeatString() {
-    if (_repeatDays.isEmpty) return 'Once';
-    if (_repeatDays.length == 7) return 'Daily';
+    final l10n = AppLocalizations.of(context);
+    if (_repeatDays.isEmpty) return l10n.isSpanish ? 'Una vez' : 'Once';
+    if (_repeatDays.length == 7) return l10n.isSpanish ? 'Diario' : 'Daily';
     if (_repeatDays.length == 5 &&
         !_repeatDays.contains(0) &&
         !_repeatDays.contains(6)) {
-      return 'Weekdays';
+      return l10n.isSpanish ? 'Días laborales' : 'Weekdays';
     }
     if (_repeatDays.length == 2 &&
         _repeatDays.contains(0) &&
         _repeatDays.contains(6)) {
-      return 'Weekends';
+      return l10n.isSpanish ? 'Fines de semana' : 'Weekends';
     }
     return _repeatDays.map((day) => _dayNames[day]).join(', ');
   }
 
   String _getContentString() {
+    final l10n = AppLocalizations.of(context);
     final content = <String>[];
-    if (_hasMotivation) content.add('Motivation');
-    if (_hasHoroscope) content.add('Horoscope');
-    if (_hasWeather) content.add('Weather');
-    return content.isEmpty ? 'None' : content.join(', ');
+    if (_hasMotivation)
+      content.add(l10n.isSpanish ? 'Motivación' : 'Motivation');
+    if (_hasHoroscope) content.add(l10n.horoscope);
+    if (_hasWeather) content.add(l10n.isSpanish ? 'Clima' : 'Weather');
+    return content.isEmpty
+        ? (l10n.isSpanish ? 'Ninguno' : 'None')
+        : content.join(', ');
   }
 
   void _selectTime() async {

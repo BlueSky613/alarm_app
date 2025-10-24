@@ -8,6 +8,7 @@ import 'package:dawn_weaver/screens/alarms_list_screen.dart';
 import 'package:dawn_weaver/screens/add_edit_alarm_screen.dart';
 import 'package:dawn_weaver/screens/settings_screen.dart';
 import 'package:dawn_weaver/screens/user_setup_screen.dart';
+import 'package:dawn_weaver/l10n/app_localizations.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -153,13 +154,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildHeader() {
-    final greeting =
-        _userProfile != null ? 'Hello, ${_userProfile!.name}!' : 'Welcome!';
+    final l10n = AppLocalizations.of(context);
+    final greeting = _userProfile != null
+        ? l10n.helloName(_userProfile!.name)
+        : l10n.welcome;
     final timeOfDay = _currentTime.hour < 12
-        ? 'Good Morning'
+        ? l10n.goodMorning
         : _currentTime.hour < 17
-            ? 'Good Afternoon'
-            : 'Good Evening';
+            ? l10n.goodAfternoon
+            : l10n.goodEvening;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,7 +280,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Next Alarm',
+                      AppLocalizations.of(context).nextAlarm,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: Theme.of(context)
                                 .colorScheme
@@ -323,7 +326,7 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'in',
+                          AppLocalizations.of(context).inTime,
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: Theme.of(context)
@@ -360,14 +363,14 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'No Active Alarms',
+                  AppLocalizations.of(context).noActiveAlarms,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Tap + to create your first alarm',
+                  AppLocalizations.of(context).tapToCreateFirstAlarm,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context)
                             .colorScheme
@@ -381,13 +384,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildQuickActions() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
           child: _buildQuickActionCard(
             icon: Icons.alarm_add,
-            label: 'Quick Alarm',
-            subtitle: '15 minutes',
+            label: l10n.quickAlarm,
+            subtitle: l10n.minutes15,
             onTap: () => _createQuickAlarm(15),
           ),
         ),
@@ -395,8 +399,8 @@ class _HomePageState extends State<HomePage> {
         Expanded(
           child: _buildQuickActionCard(
             icon: Icons.bedtime,
-            label: 'Power Nap',
-            subtitle: '20 minutes',
+            label: l10n.powerNap,
+            subtitle: l10n.minutes20,
             onTap: () => _createQuickAlarm(20),
           ),
         ),
@@ -449,12 +453,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBottomNavigation() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         _buildNavButton(
           icon: Icons.list,
-          label: 'Alarms',
+          label: l10n.alarms,
           onTap: () {
             Navigator.of(context)
                 .push(
@@ -467,7 +472,7 @@ class _HomePageState extends State<HomePage> {
         ),
         _buildNavButton(
           icon: Icons.add_circle,
-          label: 'Add Alarm',
+          label: l10n.addAlarm,
           isPrimary: true,
           onTap: () {
             Navigator.of(context)
@@ -481,7 +486,7 @@ class _HomePageState extends State<HomePage> {
         ),
         _buildNavButton(
           icon: Icons.person,
-          label: 'Profile',
+          label: l10n.profile,
           onTap: () {
             Navigator.of(context)
                 .push(
@@ -545,11 +550,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _createQuickAlarm(int minutes) async {
+    final l10n = AppLocalizations.of(context);
     final quickAlarmTime = DateTime.now().add(Duration(minutes: minutes));
     final quickAlarm = Alarms(
       id: 'quick_${DateTime.now().millisecondsSinceEpoch}',
       time: quickAlarmTime,
-      label: minutes == 15 ? 'Quick Alarm' : 'Power Nap',
+      label: minutes == 15 ? l10n.quickAlarm : l10n.powerNap,
       hasMotivation: true,
     );
 
@@ -558,12 +564,14 @@ class _HomePageState extends State<HomePage> {
 
     _loadData();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-            'Quick alarm set for ${DateFormat('HH:mm').format(quickAlarmTime)}'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n
+              .quickAlarmSetFor(DateFormat('HH:mm').format(quickAlarmTime))),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
+      );
+    }
   }
 }

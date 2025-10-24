@@ -6,12 +6,14 @@ import 'package:dawn_weaver/models/user_profile.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
 import 'package:dawn_weaver/services/content_service.dart';
 import 'package:dawn_weaver/services/audio_service.dart';
+import 'package:dawn_weaver/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dawn_weaver/services/alarm_service.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
+import 'package:translator/translator.dart';
 
 class WakeupScreen extends StatefulWidget {
   final Alarms alarm;
@@ -138,8 +140,12 @@ class _WakeupScreenState extends State<WakeupScreen>
         audioString += _contentList[i];
       }
       _contentList.clear();
-      await AudioService.speakGreeting(
+      var translation = await GoogleTranslator().translate(
         audioString,
+        to: _userProfile?.language ?? 'en',
+      );
+      await AudioService.speakGreeting(
+        translation.text,
         language: _userProfile?.language ?? 'en',
       );
     }
@@ -188,6 +194,7 @@ class _WakeupScreenState extends State<WakeupScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: Stack(
         children: [
@@ -250,14 +257,14 @@ class _WakeupScreenState extends State<WakeupScreen>
                 Row(
                   children: [
                     _buildNeonButton(
-                      label: 'Snooze ${widget.alarm.snoozeMinutes}m',
+                      label: l10n.snoozedForMinutes(widget.alarm.snoozeMinutes),
                       color: Colors.blueAccent.shade200,
                       icon: Icons.snooze,
                       onTap: _snoozeAlarm,
                     ),
                     const SizedBox(width: 16),
                     _buildNeonButton(
-                      label: 'I\'m Awake!',
+                      label: l10n.awake,
                       color: Colors.tealAccent.shade200,
                       icon: Icons.check,
                       onTap: _dismissAlarm,

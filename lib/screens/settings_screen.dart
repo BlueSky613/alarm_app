@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:dawn_weaver/models/user_profile.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
 import 'package:dawn_weaver/services/alarm_service.dart';
+import 'package:dawn_weaver/services/language_service.dart';
+import 'package:dawn_weaver/l10n/app_localizations.dart';
+import 'package:dawn_weaver/main.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -36,15 +39,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(AppLocalizations.of(context).settings),
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         actions: [
           if (_userProfile != null)
             TextButton(
-              onPressed: _isEditing ? _saveProfile : () => setState(() => _isEditing = true),
+              onPressed: _isEditing
+                  ? _saveProfile
+                  : () => setState(() => _isEditing = true),
               child: Text(
-                _isEditing ? 'Save' : 'Edit',
+                _isEditing
+                    ? AppLocalizations.of(context).save
+                    : AppLocalizations.of(context).edit,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w600,
@@ -84,7 +91,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         gradient: LinearGradient(
           colors: [
             Theme.of(context).colorScheme.primaryContainer,
-            Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7),
+            Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.7),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -97,11 +107,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             radius: 40,
             backgroundColor: Theme.of(context).colorScheme.primary,
             child: Text(
-              _userProfile!.name.isNotEmpty ? _userProfile!.name[0].toUpperCase() : '?',
+              _userProfile!.name.isNotEmpty
+                  ? _userProfile!.name[0].toUpperCase()
+                  : '?',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
           ),
           const SizedBox(height: 16),
@@ -111,24 +123,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               textAlign: TextAlign.center,
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+                fillColor: Theme.of(context)
+                    .colorScheme
+                    .surface
+                    .withValues(alpha: 0.8),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             )
           else
             Text(
               _userProfile!.name,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.w600,
-              ),
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           const SizedBox(height: 8),
           Row(
@@ -142,8 +158,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Text(
                 _getZodiacName(_userProfile!.zodiacSign),
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
-                ),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onPrimaryContainer
+                          .withValues(alpha: 0.8),
+                    ),
               ),
             ],
           ),
@@ -153,20 +172,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildLanguageSection() {
+    final l10n = AppLocalizations.of(context);
     return _buildSection(
-      title: 'Language',
+      title: l10n.language,
       icon: Icons.language,
       children: [
-        _buildLanguageOption('en', '🇺🇸', 'English'),
+        _buildLanguageOption('es', '🇪🇸', l10n.spanish),
         const SizedBox(height: 8),
-        _buildLanguageOption('es', '🇪🇸', 'Español'),
+        _buildLanguageOption('en', '🇺🇸', l10n.english),
       ],
     );
   }
 
   Widget _buildLanguageOption(String code, String flag, String name) {
     final isSelected = _userProfile!.language == code;
-    
+
     return GestureDetector(
       onTap: _isEditing ? () => _updateLanguage(code) : null,
       child: Container(
@@ -189,11 +209,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(
               name,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.onPrimaryContainer
-                    : Theme.of(context).colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        : Theme.of(context).colorScheme.onSurface,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
             ),
             const Spacer(),
             if (isSelected)
@@ -208,8 +229,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildZodiacSection() {
+    final l10n = AppLocalizations.of(context);
     return _buildSection(
-      title: 'Zodiac Sign',
+      title: l10n.selectZodiacSign,
       icon: Icons.star,
       children: [
         if (_isEditing)
@@ -226,7 +248,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: sign,
                 child: Row(
                   children: [
-                    Text(profile.zodiacEmoji, style: const TextStyle(fontSize: 20)),
+                    Text(profile.zodiacEmoji,
+                        style: const TextStyle(fontSize: 20)),
                     const SizedBox(width: 12),
                     Text(_getZodiacName(sign)),
                   ],
@@ -259,15 +282,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       _getZodiacName(_userProfile!.zodiacSign),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.w600,
-                      ),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                     Text(
                       _getZodiacDates(_userProfile!.zodiacSign),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
-                      ),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer
+                                .withValues(alpha: 0.7),
+                          ),
                     ),
                   ],
                 ),
@@ -279,28 +307,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildPreferencesSection() {
+    final l10n = AppLocalizations.of(context);
     return _buildSection(
-      title: 'Preferences',
+      title: l10n.generalSettings,
       icon: Icons.settings,
       children: [
         _buildPreferenceItem(
           icon: Icons.notifications,
-          title: 'Notification Permission',
-          subtitle: 'Allow notifications for alarms',
+          title: l10n.notificationPermission,
+          subtitle: l10n.allowNotifications,
           trailing: Icon(
             Icons.chevron_right,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           ),
           onTap: _openNotificationSettings,
         ),
         const SizedBox(height: 12),
         _buildPreferenceItem(
           icon: Icons.volume_up,
-          title: 'Audio Settings',
-          subtitle: 'Manage text-to-speech and sound',
+          title: l10n.audioSettings,
+          subtitle: l10n.manageAudio,
           trailing: Icon(
             Icons.chevron_right,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           ),
           onTap: _openAudioSettings,
         ),
@@ -309,20 +340,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAboutSection() {
+    final l10n = AppLocalizations.of(context);
     return _buildSection(
-      title: 'About',
+      title: l10n.about,
       icon: Icons.info_outline,
       children: [
         _buildPreferenceItem(
           icon: Icons.apps,
-          title: 'Dawn Weaver',
-          subtitle: 'Version 1.0.0',
+          title: l10n.appTitle,
+          subtitle: '${l10n.version} 1.0.0',
         ),
         const SizedBox(height: 12),
         _buildPreferenceItem(
           icon: Icons.star,
-          title: 'Rate App',
-          subtitle: 'Help us improve Dawn Weaver',
+          title: l10n.rateApp,
+          subtitle: l10n.helpSupport,
           onTap: () {
             // Rate app functionality
           },
@@ -332,14 +364,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildDangerZone() {
+    final l10n = AppLocalizations.of(context);
     return _buildSection(
-      title: 'Danger Zone',
+      title: l10n.dangerZone,
       icon: Icons.warning,
       children: [
         _buildPreferenceItem(
           icon: Icons.delete_forever,
-          title: 'Clear All Data',
-          subtitle: 'Delete all alarms and reset profile',
+          title: l10n.clearAllData,
+          subtitle: l10n.clearDataWarning,
           trailing: Icon(
             Icons.chevron_right,
             color: Theme.of(context).colorScheme.error,
@@ -370,8 +403,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(
               title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ],
         ),
@@ -405,7 +438,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: (titleColor ?? Theme.of(context).colorScheme.primary).withValues(alpha: 0.1),
+                color: (titleColor ?? Theme.of(context).colorScheme.primary)
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -422,15 +456,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: titleColor,
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: titleColor,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   Text(
                     subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.7),
+                        ),
                   ),
                 ],
               ),
@@ -478,11 +515,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return dates[sign] ?? '';
   }
 
-  void _updateLanguage(String language) {
+  void _updateLanguage(String language) async {
     if (_userProfile != null) {
       setState(() {
         _userProfile = _userProfile!.copyWith(language: language);
       });
+      // Update the language service immediately
+      await languageService.changeLanguage(language);
     }
   }
 
@@ -499,31 +538,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final updatedProfile = _userProfile!.copyWith(
         name: _nameController.text.trim(),
       );
-      
+
       await StorageService.saveUserProfile(updatedProfile);
       setState(() {
         _userProfile = updatedProfile;
         _isEditing = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(languageService.isSpanish
+                  ? 'Perfil actualizado exitosamente'
+                  : 'Profile updated successfully')),
+        );
+      }
     }
   }
 
   void _openNotificationSettings() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Notification Settings'),
-        content: const Text(
-          'Please go to your device settings to manage notification permissions for Dawn Weaver.',
-        ),
+        title: Text(l10n.notificationPermission),
+        content: Text(l10n.openDeviceSettings),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -531,17 +574,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _openAudioSettings() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Audio Settings'),
-        content: const Text(
-          'Text-to-speech and audio settings can be adjusted in your device\'s accessibility settings.',
-        ),
+        title: Text(l10n.audioSettings),
+        content: Text(l10n.manageAudio),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -549,20 +591,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showClearDataDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          'Clear All Data?',
+          l10n.confirmClearData,
           style: TextStyle(color: Theme.of(context).colorScheme.error),
         ),
-        content: const Text(
-          'This will permanently delete all your alarms, settings, and profile data. This action cannot be undone.',
-        ),
+        content: Text(l10n.clearDataWarning),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -570,7 +611,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _clearAllData();
             },
             child: Text(
-              'Delete Everything',
+              l10n.deleteEverything,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
@@ -582,16 +623,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _clearAllData() async {
     // Cancel all scheduled alarms first
     await AlarmService.rescheduleAllAlarms();
-    
+
     // Clear all stored data
     await StorageService.clearAll();
-    
+
     if (mounted) {
       // Navigate back and show confirmation
       Navigator.of(context).popUntil((route) => route.isFirst);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('All data cleared successfully'),
+          content: Text(languageService.isSpanish
+              ? 'Todos los datos eliminados exitosamente'
+              : 'All data cleared successfully'),
           backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );

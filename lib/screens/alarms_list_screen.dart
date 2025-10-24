@@ -4,6 +4,7 @@ import 'package:dawn_weaver/models/alarm.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
 import 'package:dawn_weaver/services/alarm_service.dart';
 import 'package:dawn_weaver/screens/add_edit_alarm_screen.dart';
+import 'package:dawn_weaver/l10n/app_localizations.dart';
 
 class AlarmsListScreen extends StatefulWidget {
   const AlarmsListScreen({super.key});
@@ -33,7 +34,7 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: const Text('My Alarms'),
+        title: Text(AppLocalizations.of(context).alarms),
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         actions: [
@@ -105,7 +106,7 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'No Alarms Yet',
+              AppLocalizations.of(context).noAlarmsYet,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: Theme.of(context)
                         .colorScheme
@@ -115,7 +116,7 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Create your first alarm to start waking up with personalized greetings and content',
+              AppLocalizations.of(context).addYourFirstAlarm,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context)
@@ -136,7 +137,7 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
                     .then((_) => _loadAlarms());
               },
               icon: const Icon(Icons.add),
-              label: const Text('Create First Alarm'),
+              label: Text(AppLocalizations.of(context).createFirstAlarm),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -180,7 +181,8 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem('Total', (_alarms.length - quickAlarms).toString()),
+          _buildStatItem(AppLocalizations.of(context).alarms,
+              (_alarms.length - quickAlarms).toString()),
           Container(
             height: 40,
             width: 1,
@@ -189,7 +191,8 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
                 .onPrimaryContainer
                 .withValues(alpha: 0.3),
           ),
-          _buildStatItem('Active', activeAlarms.toString()),
+          _buildStatItem(AppLocalizations.of(context).activeAlarms,
+              activeAlarms.toString()),
           Container(
             height: 40,
             width: 1,
@@ -198,7 +201,8 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
                 .onPrimaryContainer
                 .withValues(alpha: 0.3),
           ),
-          _buildStatItem('Inactive', inactiveAlarms.toString()),
+          _buildStatItem(AppLocalizations.of(context).inactiveAlarms,
+              inactiveAlarms.toString()),
         ],
       ),
     );
@@ -257,17 +261,17 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Alarm'),
-        content: const Text('Are you sure you want to delete this alarm?'),
+        title: Text(AppLocalizations.of(context).deleteAlarm),
+        content: Text(AppLocalizations.of(context).clearDataWarning),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
-              'Delete',
+              AppLocalizations.of(context).delete,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
@@ -393,21 +397,21 @@ class AlarmCard extends StatelessWidget {
                 _buildFeatureChip(
                   context,
                   Icons.star,
-                  'Horoscope',
+                  AppLocalizations.of(context).horoscope,
                   alarm.hasHoroscope,
                 ),
                 const SizedBox(width: 8),
                 _buildFeatureChip(
                   context,
                   Icons.lightbulb_outline,
-                  'Motivation',
+                  AppLocalizations.of(context).motivationalMessage,
                   alarm.hasMotivation,
                 ),
                 const SizedBox(width: 8),
                 _buildFeatureChip(
                   context,
                   Icons.cloud,
-                  'Weather',
+                  AppLocalizations.of(context).weatherInfo,
                   alarm.hasWeather,
                 ),
                 // const Spacer(),

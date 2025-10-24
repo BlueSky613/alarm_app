@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:dawn_weaver/models/user_profile.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
 
+import 'package:dawn_weaver/l10n/app_localizations.dart';
+import 'package:dawn_weaver/screens/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dawn_weaver/main.dart';
+
 class UserSetupScreen extends StatefulWidget {
   const UserSetupScreen({super.key});
 
@@ -12,7 +17,7 @@ class UserSetupScreen extends StatefulWidget {
 class _UserSetupScreenState extends State<UserSetupScreen> {
   final _nameController = TextEditingController();
   ZodiacSign _selectedZodiacSign = ZodiacSign.aries;
-  String _selectedLanguage = 'en';
+  String _selectedLanguage = 'es'; // Default to Spanish
 
   final Map<ZodiacSign, String> _zodiacNames = {
     ZodiacSign.aries: 'Aries',
@@ -81,6 +86,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
   }
 
   Widget _buildWelcomeHeader() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -90,7 +96,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          'Welcome to\nDawn Weaver',
+          '${l10n.welcome}\nDawn Weaver',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.onSurface,
@@ -98,7 +104,9 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Let\'s personalize your wake-up experience with virtual characters, daily horoscopes, and motivational messages.',
+          _selectedLanguage == 'es'
+              ? 'Personalicemos tu experiencia de despertar con personajes virtuales, horóscopos diarios y mensajes motivacionales.'
+              : 'Let\'s personalize your wake-up experience with virtual characters, daily horoscopes, and motivational messages.',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context)
                     .colorScheme
@@ -111,11 +119,14 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
   }
 
   Widget _buildNameInput() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'What should we call you?',
+          _selectedLanguage == 'es'
+              ? '¿Cómo deberíamos llamarte?'
+              : 'What should we call you?',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
@@ -125,7 +136,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         TextField(
           controller: _nameController,
           decoration: InputDecoration(
-            hintText: 'Enter your name or nickname',
+            hintText: l10n.enterYourName,
             prefixIcon: Icon(
               Icons.person_outline,
               color: Theme.of(context).colorScheme.primary,
@@ -166,7 +177,9 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Choose your language',
+          _selectedLanguage == 'es'
+              ? 'Elige tu idioma'
+              : 'Choose your language',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
@@ -176,11 +189,11 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         Row(
           children: [
             Expanded(
-              child: _buildLanguageCard('en', '🇺🇸', 'English'),
+              child: _buildLanguageCard('es', '🇪🇸', 'Español'),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: _buildLanguageCard('es', '🇪🇸', 'Español'),
+              child: _buildLanguageCard('en', '🇺🇸', 'English'),
             ),
           ],
         ),
@@ -192,10 +205,12 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
     final isSelected = _selectedLanguage == code;
 
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         setState(() {
           _selectedLanguage = code;
         });
+        // Update the language service immediately for UI updates
+        await languageService.changeLanguage(code);
       },
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -236,7 +251,9 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Select your zodiac sign',
+          _selectedLanguage == 'es'
+              ? 'Selecciona tu signo zodiacal'
+              : 'Select your zodiac sign',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
@@ -244,7 +261,9 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'This helps us provide personalized horoscopes',
+          _selectedLanguage == 'es'
+              ? 'Esto nos ayuda a proporcionar horóscopos personalizados'
+              : 'This helps us provide personalized horoscopes',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context)
                     .colorScheme
@@ -315,39 +334,70 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
   }
 
   Widget _buildFeaturesList() {
-    final features = [
-      {
-        'icon': Icons.face,
-        'title': 'Virtual Characters',
-        'description': 'Choose from animated characters that will greet you',
-      },
-      {
-        'icon': Icons.star,
-        'title': 'Daily Horoscope',
-        'description': 'Personalized horoscope based on your zodiac sign',
-      },
-      {
-        'icon': Icons.lightbulb_outline,
-        'title': 'Motivational Messages',
-        'description': 'Inspiring phrases to start your day positively',
-      },
-      {
-        'icon': Icons.cloud,
-        'title': 'Weather Updates',
-        'description': 'Current weather information for your area',
-      },
-      {
-        'icon': Icons.music_note,
-        'title': 'Custom Music',
-        'description': 'Wake up to your favorite songs',
-      },
-    ];
+    final features = _selectedLanguage == 'es'
+        ? [
+            {
+              'icon': Icons.face,
+              'title': 'Personajes Virtuales',
+              'description': 'Elige entre personajes animados que te saludarán',
+            },
+            {
+              'icon': Icons.star,
+              'title': 'Horóscopo Diario',
+              'description':
+                  'Horóscopo personalizado basado en tu signo zodiacal',
+            },
+            {
+              'icon': Icons.lightbulb_outline,
+              'title': 'Mensajes Motivacionales',
+              'description':
+                  'Frases inspiradoras para comenzar tu día positivamente',
+            },
+            {
+              'icon': Icons.cloud,
+              'title': 'Actualizaciones del Clima',
+              'description': 'Información del clima actual para tu área',
+            },
+            {
+              'icon': Icons.music_note,
+              'title': 'Música Personalizada',
+              'description': 'Despierta con tus canciones favoritas',
+            },
+          ]
+        : [
+            {
+              'icon': Icons.face,
+              'title': 'Virtual Characters',
+              'description':
+                  'Choose from animated characters that will greet you',
+            },
+            {
+              'icon': Icons.star,
+              'title': 'Daily Horoscope',
+              'description': 'Personalized horoscope based on your zodiac sign',
+            },
+            {
+              'icon': Icons.lightbulb_outline,
+              'title': 'Motivational Messages',
+              'description': 'Inspiring phrases to start your day positively',
+            },
+            {
+              'icon': Icons.cloud,
+              'title': 'Weather Updates',
+              'description': 'Current weather information for your area',
+            },
+            {
+              'icon': Icons.music_note,
+              'title': 'Custom Music',
+              'description': 'Wake up to your favorite songs',
+            },
+          ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'What you\'ll get:',
+          _selectedLanguage == 'es' ? 'Lo que obtendrás:' : 'What you\'ll get:',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
@@ -420,7 +470,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
           elevation: 0,
         ),
         child: Text(
-          'Continue',
+          _selectedLanguage == 'es' ? 'Continuar' : 'Continue',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onPrimary,
                 fontWeight: FontWeight.w600,
@@ -442,8 +492,17 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
     await StorageService.saveUserProfile(profile);
     await StorageService.setFirstRun(false);
 
+    // Mark setup as complete
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('setup_complete', true);
+
+    // Ensure language is set in the service
+    await languageService.changeLanguage(_selectedLanguage);
+
     if (mounted) {
-      Navigator.of(context).pop();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
     }
   }
 
