@@ -179,7 +179,7 @@ class _HomePageState extends State<HomePage> {
                         color: Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withValues(alpha: 0.7),
+                            .withValues(alpha: 0.8),
                       ),
                 ),
                 Text(
