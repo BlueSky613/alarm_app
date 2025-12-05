@@ -92,7 +92,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
       children: [
         Text(
           '🌅',
-          style: const TextStyle(fontSize: 48),
+          style: const TextStyle(fontSize: 50),
         ),
         const SizedBox(height: 16),
         Text(
