@@ -51,7 +51,7 @@ class _TestScreenState extends State<TestScreen> with TickerProviderStateMixin {
             child: Center(
               child: Column(
                 children: [
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 34),
                   Text(
                     AppLocalizations.of(context).alarms.toUpperCase(),
                     style: GoogleFonts.orbitron(
