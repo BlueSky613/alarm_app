@@ -41,7 +41,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).settings),
         backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 0,
+        elevation: 1,
         actions: [
           if (_userProfile != null)
             TextButton(
