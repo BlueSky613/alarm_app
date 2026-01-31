@@ -25,7 +25,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
   bool _hasHoroscope = false;
   bool _hasMotivation = true;
   bool _hasWeather = false;
-  int _snoozeMinutes = 10;
+  int _snoozeMinutes = 15;
 
   List<dynamic> _virtualCharacters = [];
 
