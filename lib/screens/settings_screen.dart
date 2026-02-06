@@ -54,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     : AppLocalizations.of(context).edit,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
