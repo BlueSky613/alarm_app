@@ -1,58 +1,77 @@
 import 'package:alarm/alarm.dart';
-import 'package:dawn_weaver/screens/home_screen.dart';
+import 'package:dawn_weaver/screens/wakeup_alignment_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dawn_weaver/models/alarm.dart';
 import 'package:dawn_weaver/models/user_profile.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
-import 'package:dawn_weaver/services/content_service.dart';
-import 'package:dawn_weaver/services/audio_service.dart';
 import 'package:dawn_weaver/l10n/app_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dawn_weaver/services/alarm_service.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:dawn_weaver/utils/virtual_character_video.dart';
 import 'package:intl/intl.dart';
-import 'package:translator/translator.dart';
 
 class WakeupScreen extends StatefulWidget {
   final Alarms alarm;
   final int id;
+  final bool isPreview;
 
-  const WakeupScreen({super.key, required this.alarm, required this.id});
+  /// When set, video is already initialized so the first frame shows immediately.
+  final VideoPlayerController? preloadedVideoController;
+
+  const WakeupScreen({
+    super.key,
+    required this.alarm,
+    required this.id,
+    this.isPreview = false,
+    this.preloadedVideoController,
+  });
 
   @override
   State<WakeupScreen> createState() => _WakeupScreenState();
 }
 
 class _WakeupScreenState extends State<WakeupScreen>
-    with TickerProviderStateMixin {
-  UserProfile? _userProfile;
-  String? _weatherData;
-  String? _horoscope;
-  String? _motivationMessage;
-  String audioString = "";
-  List<String> _contentList = [];
-  int _currentContentIndex = 0;
-  late AnimationController _pulseController;
+    with SingleTickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  late VideoPlayerController _controller;
+  VideoPlayerController? _videoController;
   DateTime _currentTime = DateTime.now();
   late Stream<DateTime> _timeStream;
+  UserProfile? _profile;
 
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
-    _loadUserData();
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
+    _fadeController.forward();
+    _loadProfile();
+    if (widget.preloadedVideoController != null) {
+      _videoController = widget.preloadedVideoController;
+      if (mounted) setState(() {});
+    } else {
+      _loadCharacterVideo();
+    }
     _startTimeStream();
-    _startWakeupSequence();
+  }
+
+  Future<void> _loadProfile() async {
+    _profile = await StorageService.getUserProfile();
+    if (mounted) setState(() {});
   }
 
   void _startTimeStream() {
-    _timeStream =
-        Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now());
+    _timeStream = Stream.periodic(
+      const Duration(seconds: 1),
+      (_) => DateTime.now(),
+    );
     _timeStream.listen((time) {
       if (mounted) {
         setState(() {
@@ -62,134 +81,61 @@ class _WakeupScreenState extends State<WakeupScreen>
     });
   }
 
-  void _initializeAnimations() {
-    _pulseController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
+  Future<void> _loadCharacterVideo() async {
+    if (widget.alarm.virtualCharacter == 'default') return;
+
+    final videoUri = resolveVirtualCharacterVideoUri(
+      widget.alarm.virtualCharacter,
     );
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    ));
-
-    _pulseController.repeat(reverse: true);
-    _fadeController.forward();
-  }
-
-  Future<void> _loadUserData() async {
-    _userProfile = await StorageService.getUserProfile();
-
-    if (widget.alarm.virtualCharacter != 'default') {
-      _controller = VideoPlayerController.networkUrl(Uri.parse(
-          "${dotenv.env['base_url']}/storage/${widget.alarm.virtualCharacter}")) // or .network for online video
-        ..setLooping(true)
-        ..setVolume(0)
-        ..initialize().then((_) {
+    _videoController = VideoPlayerController.networkUrl(videoUri)
+      ..setLooping(true)
+      ..setVolume(widget.alarm.muteVirtualCharacterAudio ? 0 : 1)
+      ..initialize().then((_) {
+        if (mounted) {
           setState(() {});
-          _controller.play();
-        });
-    }
-
-    if (widget.alarm.hasMotivation) {
-      _motivationMessage = widget.alarm.motivationMessage;
-    }
-
-    if (widget.alarm.hasWeather) {
-      _weatherData = _userProfile!.weather;
-    }
-
-    if (widget.alarm.hasHoroscope) {
-      _horoscope = _userProfile!.horoscope;
-    }
-
-    if (_userProfile != null) {
-      _contentList = ContentService.getWakeupContentList(
-        profile: _userProfile!,
-        includeHoroscope: widget.alarm.hasHoroscope,
-        includeMotivation: widget.alarm.hasMotivation,
-        includeWeather: widget.alarm.hasWeather,
-        weatherData: _weatherData,
-        horoscope: _horoscope,
-        motivationMessage: _motivationMessage,
-      );
-
-      setState(() {});
-    }
+          _videoController?.play();
+        }
+      });
   }
 
-  Future<void> _startWakeupSequence() async {
-    // Wait a moment for the user to wake up
-    await Future.delayed(const Duration(seconds: 3));
-
-    // Start speaking content
-    if (_contentList.isNotEmpty && _userProfile != null) {
-      _speakCurrentContent();
-    }
+  String _formatTimeAmPm(BuildContext context) {
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.jm(locale).format(_currentTime);
   }
 
-  void _speakCurrentContent() async {
-    if (_currentContentIndex < _contentList.length) {
-      for (var i = 0; i < _contentList.length; i++) {
-        audioString += _contentList[i];
-      }
-      _contentList.clear();
-      var translation = await GoogleTranslator().translate(
-        audioString,
-        to: _userProfile?.language ?? 'en',
-      );
-      await AudioService.speakGreeting(
-        translation.text,
-        language: _userProfile?.language ?? 'en',
-      );
-    }
-  }
+  Future<void> _snoozeAlarm() async {
+    if (widget.isPreview) return;
 
-  void _snoozeAlarm() async {
-    // await AudioService.stopAlarmSound();
     await AlarmService.snoozeAlarm(widget.alarm.id, widget.alarm.snoozeMinutes);
 
     if (mounted) {
       Navigator.of(context).pop();
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            Text('Alarm snoozed for ${widget.alarm.snoozeMinutes} minutes'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
-    );
-  }
-
-  void _dismissAlarm() async {
-    // await AudioService.stopAlarmSound();
-    await AudioService.stopSpeaking();
-    await Alarm.stop(widget.id);
-
-    final prefs = await SharedPreferences.getInstance();
-
-    if (widget.alarm.label == "Quick Alarm" ||
-        widget.alarm.label == "Power Nap") {
-      await StorageService.deleteAlarm(widget.alarm.id);
-      await AlarmService.cancelAlarm(widget.alarm.id);
-    }
-
-    prefs.setInt('alarmActive', 0);
     if (mounted) {
-      Navigator.of(context).pop();
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => HomePage(),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Alarm snoozed for ${widget.alarm.snoozeMinutes} minutes',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
     }
+  }
+
+  Future<void> _onWakePressed() async {
+    if (widget.isPreview) return;
+
+    await Alarm.stop(widget.id);
+
+    if (!mounted) return;
+
+    // Replace wakeup so only alignment sits above the previous route (e.g. home).
+    // Do not await: this route is disposed after replacement.
+    Navigator.of(context).pushReplacement(
+      wakeupAlignmentRoute(alarm: widget.alarm, profile: _profile),
+    );
   }
 
   @override
@@ -198,82 +144,117 @@ class _WakeupScreenState extends State<WakeupScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Video background
           if (widget.alarm.virtualCharacter != 'default' &&
-              _controller.value.isInitialized)
+              (_videoController?.value.isInitialized ?? false))
             SizedBox.expand(
               child: FittedBox(
                 fit: BoxFit.cover,
                 child: SizedBox(
-                  width: _controller.value.size.width,
-                  height: _controller.value.size.height,
-                  child: VideoPlayer(_controller),
+                  width: _videoController!.value.size.width,
+                  height: _videoController!.value.size.height,
+                  child: VideoPlayer(_videoController!),
                 ),
               ),
             )
+          else if (widget.alarm.virtualCharacter != 'default')
+            const ColoredBox(color: Colors.black)
           else
-            Container(
-              color: Colors.black,
-            ),
-          // Main content
-          SafeArea(
-              child: Center(
-            child: Column(
+            Stack(
+              fit: StackFit.expand,
               children: [
-                const SizedBox(height: 32),
-                widget.alarm.label.isNotEmpty
-                    ? Text(
-                        widget.alarm.label,
-                        style: GoogleFonts.orbitron(
-                          color: Colors.cyanAccent,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                        ),
-                      )
-                    : Text(
-                        'ALARM',
-                        style: GoogleFonts.orbitron(
-                          color: Colors.cyanAccent,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 4,
-                        ),
-                      ),
-                const SizedBox(height: 16),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Text(
-                    DateFormat('HH:mm').format(_currentTime),
-                    style: GoogleFonts.orbitron(
-                      color: Colors.cyanAccent,
-                      fontSize: 70,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 2,
-                    ),
+                const ColoredBox(color: Colors.black),
+                Opacity(
+                  opacity: 0.8,
+                  child: Image.asset(
+                    'assets/solrise_logo.png',
+                    fit: BoxFit.fitWidth,
                   ),
                 ),
-                const SizedBox(height: 32),
-                Row(
-                  children: [
-                    _buildNeonButton(
-                      label: l10n.snoozedForMinutes(widget.alarm.snoozeMinutes),
-                      color: Colors.blueAccent.shade200,
-                      icon: Icons.snooze,
-                      onTap: _snoozeAlarm,
-                    ),
-                    const SizedBox(width: 16),
-                    _buildNeonButton(
-                      label: l10n.awake,
-                      color: Colors.tealAccent.shade200,
-                      icon: Icons.check,
-                      onTap: _dismissAlarm,
-                    ),
-                  ],
-                )
               ],
             ),
-          )),
+          SafeArea(
+            bottom: false,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    widget.alarm.label.isNotEmpty
+                        ? Text(
+                            widget.alarm.label,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.orbitron(
+                              color: Colors.cyanAccent,
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                          )
+                        : Text(
+                            'ALARM',
+                            style: GoogleFonts.orbitron(
+                              color: Colors.cyanAccent,
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 4,
+                            ),
+                          ),
+                    const SizedBox(height: 12),
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Text(
+                        _formatTimeAmPm(context),
+                        style: GoogleFonts.orbitron(
+                          color: Colors.cyanAccent,
+                          fontSize: 56,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildNeonButton(
+                        label: l10n.snoozedForMinutes(
+                          widget.alarm.snoozeMinutes,
+                        ),
+                        color: Colors.blueAccent.shade200,
+                        icon: Icons.snooze,
+                        onTap: _snoozeAlarm,
+                        interactive: !widget.isPreview,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildNeonButton(
+                        label: l10n.awake,
+                        color: Colors.tealAccent.shade200,
+                        icon: Icons.check,
+                        onTap: _onWakePressed,
+                        interactive: !widget.isPreview,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -284,58 +265,68 @@ class _WakeupScreenState extends State<WakeupScreen>
     required Color color,
     required VoidCallback onTap,
     IconData? icon,
+    bool interactive = true,
   }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: 52,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.9), width: 2.2),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.25),
-                blurRadius: 10,
-                spreadRadius: 4,
-              ),
-              BoxShadow(
-                color: color.withOpacity(0.08),
-                blurRadius: 6,
-                spreadRadius: 1,
-              ),
+    Widget child = GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.9), width: 2.2),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.25),
+              blurRadius: 10,
+              spreadRadius: 4,
+            ),
+            BoxShadow(
+              color: color.withValues(alpha: 0.08),
+              blurRadius: 6,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 8),
             ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, color: color, size: 20),
-                const SizedBox(width: 8),
-              ],
-              Text(
+            Flexible(
+              child: Text(
                 label.toUpperCase(),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.orbitron(
                   color: color,
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
+                  letterSpacing: 1.2,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
+    if (!interactive) {
+      child = IgnorePointer(
+        ignoring: true,
+        child: Opacity(opacity: 0.45, child: child),
+      );
+    }
+    return child;
   }
 
   @override
   void dispose() {
-    _pulseController.dispose();
     _fadeController.dispose();
-    AudioService.stopSpeaking();
+    _videoController?.dispose();
     super.dispose();
   }
 }

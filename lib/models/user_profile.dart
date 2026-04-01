@@ -20,6 +20,14 @@ class UserProfile {
   final String horoscope;
   final String language;
   final bool firstTimeSetup;
+  final String? solanaAddress;
+  final double? solanaBalance;
+  /// Local mirror of server `premium` (Pro) status.
+  final bool isPremium;
+  final bool hapticEnabled;
+  final bool soundNotificationsEnabled;
+  /// `default` | `asset:assets/avatar/...` | `file:<absolute path>`
+  final String avatarRef;
 
   UserProfile({
     this.name = 'Hello',
@@ -28,6 +36,12 @@ class UserProfile {
     this.horoscope = 'daily',
     this.language = 'en',
     this.firstTimeSetup = true,
+    this.solanaAddress,
+    this.solanaBalance,
+    this.isPremium = false,
+    this.hapticEnabled = true,
+    this.soundNotificationsEnabled = true,
+    this.avatarRef = 'default',
   });
 
   String get zodiacEmoji {
@@ -55,6 +69,12 @@ class UserProfile {
         'firstTimeSetup': firstTimeSetup,
         'weather': weather,
         'horoscope': horoscope,
+        'solanaAddress': solanaAddress,
+        'solanaBalance': solanaBalance,
+        'isPremium': isPremium,
+        'hapticEnabled': hapticEnabled,
+        'soundNotificationsEnabled': soundNotificationsEnabled,
+        'avatarRef': avatarRef,
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
@@ -67,6 +87,13 @@ class UserProfile {
         firstTimeSetup: json['firstTimeSetup'] ?? true,
         weather: json['weather'] ?? 'Celsius',
         horoscope: json['horoscope'] ?? 'daily',
+        solanaAddress: json['solanaAddress'] as String?,
+        solanaBalance: (json['solanaBalance'] as num?)?.toDouble(),
+        isPremium: json['isPremium'] as bool? ?? false,
+        hapticEnabled: json['hapticEnabled'] as bool? ?? true,
+        soundNotificationsEnabled:
+            json['soundNotificationsEnabled'] as bool? ?? true,
+        avatarRef: json['avatarRef'] as String? ?? 'default',
       );
 
   UserProfile copyWith({
@@ -76,6 +103,12 @@ class UserProfile {
     bool? firstTimeSetup,
     String? weather,
     String? horoscope,
+    String? solanaAddress,
+    double? solanaBalance,
+    bool? isPremium,
+    bool? hapticEnabled,
+    bool? soundNotificationsEnabled,
+    String? avatarRef,
   }) =>
       UserProfile(
         name: name ?? this.name,
@@ -84,5 +117,12 @@ class UserProfile {
         firstTimeSetup: firstTimeSetup ?? this.firstTimeSetup,
         weather: weather ?? this.weather,
         horoscope: horoscope ?? this.horoscope,
+        solanaAddress: solanaAddress ?? this.solanaAddress,
+        solanaBalance: solanaBalance ?? this.solanaBalance,
+        isPremium: isPremium ?? this.isPremium,
+        hapticEnabled: hapticEnabled ?? this.hapticEnabled,
+        soundNotificationsEnabled:
+            soundNotificationsEnabled ?? this.soundNotificationsEnabled,
+        avatarRef: avatarRef ?? this.avatarRef,
       );
 }

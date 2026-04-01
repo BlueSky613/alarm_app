@@ -61,10 +61,11 @@ class ContentService {
       String horoscope = "", weather = "";
       url1 =
           '$_horoscopeBaseUrl?sign=${profile.zodiacSign.toString().split('.')[1]}&day=TODAY';
+
       final response = await http.get(Uri.parse(url1));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        horoscope = data['data']['horoscope_data'];
+        horoscope = data['data']['horoscope'];
       }
       if (location != null) {
         url2 =
@@ -73,13 +74,12 @@ class ContentService {
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
           weather = formatWeatherMessage(
-              WeatherData.fromJson(data), profile.language);
+            WeatherData.fromJson(data),
+            profile.language,
+          );
         }
       }
-      final profiles = profile.copyWith(
-        weather: weather,
-        horoscope: horoscope,
-      );
+      final profiles = profile.copyWith(weather: weather, horoscope: horoscope);
       await StorageService.saveUserProfile(profiles);
     } catch (e) {
       print('Error fetching horoscope: $e');

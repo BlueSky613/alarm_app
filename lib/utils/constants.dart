@@ -3,6 +3,10 @@ class AppConstants {
   static const String appVersion = '1.0.0';
   
   // Alarm constants
+  /// Same as first entry in add-edit alarm music list; used when soundPath is empty/default.
+  static const String defaultAlarmSoundUrl =
+      'https://res.cloudinary.com/dvxshqjev/video/upload/v1774508426/1-morning-sun_a2ozu3.mp3';
+
   static const int defaultSnoozeMinutes = 10;
   static const int maxSnoozeMinutes = 60;
   static const int minSnoozeMinutes = 1;

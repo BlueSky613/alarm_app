@@ -1,4 +1,4 @@
-package com.example.advancedalarm
+package com.king.solrise
 
 import io.flutter.embedding.android.FlutterActivity
 

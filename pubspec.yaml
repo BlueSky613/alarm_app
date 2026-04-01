@@ -4,7 +4,7 @@ publish_to: "none"
 version: 1.0.0
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.8.1
 
 dependencies:
   flutter:
@@ -30,6 +30,14 @@ dependencies:
   translator: ^1.0.4+1
   audioplayers: ^6.5.1
   get: ^4.7.2
+  solana: ^0.31.0+1
+  solana_wallet_adapter: ^0.1.1
+  pinenacl: ^0.6.0
+  image_picker: ^1.0.4
+  file_picker: ^10.3.10
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  solana_common: ^0.1.0+1
 
 dev_dependencies:
   flutter_test:
@@ -42,3 +50,5 @@ flutter:
   assets:
     - assets/
     - .env
+    - assets/avatar/
+    - assets/thumbnail/

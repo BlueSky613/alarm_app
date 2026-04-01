@@ -1,12 +1,20 @@
+import 'dart:io';
+
 import 'package:dawn_weaver/screens/wakeup_screen.dart';
+import 'package:dawn_weaver/utils/virtual_character_video.dart';
 import 'package:dawn_weaver/main.dart';
+import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:dawn_weaver/models/alarm.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
+import 'package:dawn_weaver/utils/constants.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:alarm/alarm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,22 +24,74 @@ class AlarmService {
       FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
 
-  static AlarmSettings alarmSettings = AlarmSettings(
-    id: 0,
-    dateTime: tz.TZDateTime.now(tz.local),
-    assetAudioPath: 'assets/alarm.m4a',
-    volumeSettings: VolumeSettings.fade(
-        fadeDuration: Duration(seconds: 10),
-        volumeEnforced: false,
-        volume: 0.8),
-    notificationSettings: NotificationSettings(
-        title: 'Wake up!',
-        body: 'Time to start your amazing day!',
-        stopButton: 'Stop',
-        icon: '@mipmap/ic_launcher',
-        iconColor: Colors.red),
-    loopAudio: true,
-  );
+  static bool _isDeviceFilePath(String soundPath) {
+    final lower = soundPath.toLowerCase();
+    return lower.startsWith('/') ||
+        lower.startsWith('file://') ||
+        lower.contains(':\\');
+  }
+
+  /// Downloads a remote alarm track into app Documents and returns a path
+  /// relative to Documents (required by the `alarm` package). Falls back to
+  /// [assets/alarm.m4a] only if the download fails.
+  static Future<String> _cacheHttpAudioToDocuments(String url) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final safeName = '${url.hashCode.abs()}.mp3';
+    final rel = p.join('alarm_cache', safeName);
+    final file = File(p.join(dir.path, rel));
+    if (!await file.exists()) {
+      await file.parent.create(recursive: true);
+      try {
+        final resp = await http.get(Uri.parse(url));
+        if (resp.statusCode == 200) {
+          await file.writeAsBytes(resp.bodyBytes);
+        } else {
+          return 'assets/alarm.m4a';
+        }
+      } catch (_) {
+        return 'assets/alarm.m4a';
+      }
+    }
+    return rel;
+  }
+
+  /// The `alarm` package only accepts bundled assets or paths relative to app
+  /// Documents. Resolves HTTPS presets, local picker paths, or falls back.
+  static Future<String> resolveAssetAudioPath(String soundPath) async {
+    final trimmed = soundPath.trim();
+    if (trimmed.isEmpty ||
+        trimmed == 'default' ||
+        (!_isDeviceFilePath(trimmed) &&
+            !trimmed.startsWith('http://') &&
+            !trimmed.startsWith('https://') &&
+            !trimmed.startsWith('assets/'))) {
+      return _cacheHttpAudioToDocuments(AppConstants.defaultAlarmSoundUrl);
+    }
+    if (trimmed.startsWith('assets/')) {
+      return trimmed;
+    }
+
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return _cacheHttpAudioToDocuments(trimmed);
+    }
+
+    final dir = await getApplicationDocumentsDirectory();
+
+    var srcPath = trimmed;
+    if (srcPath.toLowerCase().startsWith('file://')) {
+      srcPath = Uri.parse(srcPath).toFilePath();
+    }
+    final src = File(srcPath);
+    if (!await src.exists()) {
+      return 'assets/alarm.m4a';
+    }
+    final base = p.basename(src.path);
+    final rel = p.join('alarm_custom', base);
+    final dest = File(p.join(dir.path, rel));
+    await dest.parent.create(recursive: true);
+    await src.copy(dest.path);
+    return rel;
+  }
 
   static Future<void> initialize() async {
     tz.initializeTimeZones();
@@ -49,18 +109,37 @@ class AlarmService {
       try {
         final alarms = await StorageService.getAlarms();
         Alarms? alarm;
-        try {
-          alarm = alarms.firstWhere((a) => a.id.hashCode == alarmSettings.id);
-        } catch (e) {
-          // not found
-          alarm = null;
+        final payload = alarmSettings.payload;
+        if (payload != null && payload.isNotEmpty) {
+          try {
+            alarm = alarms.firstWhere((a) => a.id == payload);
+          } catch (_) {}
         }
+        alarm ??= () {
+          try {
+            return alarms.firstWhere(
+                (a) => a.id.hashCode == alarmSettings.id);
+          } catch (_) {
+            return null;
+          }
+        }();
 
         if (alarm != null) {
+          VideoPlayerController? preloaded;
+          if (alarm.virtualCharacter != 'default') {
+            preloaded = await preloadVirtualCharacterVideo(
+              alarm.virtualCharacter,
+              mute: alarm.muteVirtualCharacterAudio,
+            );
+          }
+          if (navigatorKey.currentState?.mounted != true) return;
           navigatorKey.currentState?.push(
             MaterialPageRoute(
-              builder: (context) =>
-                  WakeupScreen(alarm: alarm!, id: alarmSettings.id),
+              builder: (context) => WakeupScreen(
+                alarm: alarm!,
+                id: alarmSettings.id,
+                preloadedVideoController: preloaded,
+              ),
             ),
           );
         } else {
@@ -112,11 +191,10 @@ class AlarmService {
       }
     }
 
-    await _scheduleNotification(alarm, scheduledDate);
-
-    // Schedule recurring alarms for the next week
     if (alarm.isRepeating) {
       await _scheduleRepeatingAlarms(alarm, scheduledDate);
+    } else {
+      await _scheduleNotification(alarm, scheduledDate);
     }
   }
 
@@ -159,17 +237,20 @@ class AlarmService {
     final id = alarm.id.hashCode;
     final prefs = await SharedPreferences.getInstance();
 
-    final title = alarm.label.isNotEmpty ? alarm.label : 'Wake up!';
+    final label = alarm.label.trim();
+    final title = label.isNotEmpty ? label : 'Wake up!';
     final body = 'Time to start your amazing day!';
 
     // Convert DateTime to TZDateTime
     final tz.TZDateTime tzScheduledDate =
         tz.TZDateTime.from(scheduledDate, tz.local);
 
-    alarmSettings = AlarmSettings(
+    final assetAudioPath = await resolveAssetAudioPath(alarm.soundPath);
+
+    final settings = AlarmSettings(
       id: notificationId ?? id,
       dateTime: tzScheduledDate,
-      assetAudioPath: 'assets/alarm.m4a',
+      assetAudioPath: assetAudioPath,
       volumeSettings: VolumeSettings.fade(
           fadeDuration: Duration(seconds: 10),
           volumeEnforced: false,
@@ -181,17 +262,25 @@ class AlarmService {
           icon: '@mipmap/ic_launcher',
           iconColor: Colors.red),
       loopAudio: true,
+      payload: alarm.id,
     );
 
-    await Alarm.set(alarmSettings: alarmSettings);
+    await Alarm.set(alarmSettings: settings);
 
-    prefs.setInt('alarmActive', id);
-
+    prefs.setInt('alarmActive', notificationId ?? id);
   }
 
   static Future<void> cancelAlarm(String alarmId) async {
-    // Cancel all possible notifications for this alarm (including repeating ones)
+    final saved = await Alarm.getAlarms();
+    for (final a in saved) {
+      if (a.payload == alarmId) {
+        await Alarm.stop(a.id);
+      }
+    }
     await Alarm.stop(alarmId.hashCode);
+    for (var i = 0; i < 30; i++) {
+      await Alarm.stop(alarmId.hashCode + i);
+    }
   }
 
   static Future<void> snoozeAlarm(String alarmId, int minutes) async {
@@ -199,12 +288,10 @@ class AlarmService {
     final alarm = alarms.firstWhere((a) => a.id == alarmId);
 
     final snoozeTime = DateTime.now().add(Duration(minutes: minutes));
-    final snoozeAlarm = alarm.copyWith(
-      time: snoozeTime,
-      id: '${alarm.id}_snooze_${DateTime.now().millisecondsSinceEpoch}',
-    );
+    final updated = alarm.copyWith(time: snoozeTime);
 
-    await scheduleAlarm(snoozeAlarm);
+    await StorageService.saveAlarm(updated);
+    await scheduleAlarm(updated);
   }
 
   static Future<void> rescheduleAllAlarms() async {

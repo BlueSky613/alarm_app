@@ -9,6 +9,7 @@ class Alarms {
   final bool hasMotivation;
   final bool hasWeather;
   final String virtualCharacter;
+  final bool muteVirtualCharacterAudio;
   final int snoozeMinutes;
   final String motivationMessage;
 
@@ -23,6 +24,7 @@ class Alarms {
     this.hasMotivation = true,
     this.hasWeather = false,
     this.virtualCharacter = 'default',
+    this.muteVirtualCharacterAudio = true,
     this.snoozeMinutes = 10,
     this.motivationMessage = 'You can do it!',
   });
@@ -30,7 +32,7 @@ class Alarms {
   bool get isRepeating => repeatDays.isNotEmpty;
 
   String get repeatString {
-    if (repeatDays.isEmpty) return 'Once';
+    if (repeatDays.isEmpty) return isActive ? 'Today' : 'Tomorrow';
     if (repeatDays.length == 7) return 'Daily';
     if (repeatDays.length == 5 && !repeatDays.contains(0) && !repeatDays.contains(6)) {
       return 'Weekdays';
@@ -54,6 +56,7 @@ class Alarms {
     'hasMotivation': hasMotivation,
     'hasWeather': hasWeather,
     'virtualCharacter': virtualCharacter,
+    'muteVirtualCharacterAudio': muteVirtualCharacterAudio,
     'snoozeMinutes': snoozeMinutes,
     'motivationMessage': motivationMessage,
   };
@@ -69,6 +72,7 @@ class Alarms {
     hasMotivation: json['hasMotivation'] ?? true,
     hasWeather: json['hasWeather'] ?? false,
     virtualCharacter: json['virtualCharacter'] ?? 'default',
+    muteVirtualCharacterAudio: json['muteVirtualCharacterAudio'] ?? true,
     snoozeMinutes: json['snoozeMinutes'] ?? 10,
     motivationMessage: json['motivationMessage'] ?? 'You can do it!',
   );
@@ -84,6 +88,7 @@ class Alarms {
     bool? hasMotivation,
     bool? hasWeather,
     String? virtualCharacter,
+    bool? muteVirtualCharacterAudio,
     int? snoozeMinutes,
     String? motivationMessage,
   }) => Alarms(
@@ -97,6 +102,8 @@ class Alarms {
     hasMotivation: hasMotivation ?? this.hasMotivation,
     hasWeather: hasWeather ?? this.hasWeather,
     virtualCharacter: virtualCharacter ?? this.virtualCharacter,
+    muteVirtualCharacterAudio:
+        muteVirtualCharacterAudio ?? this.muteVirtualCharacterAudio,
     snoozeMinutes: snoozeMinutes ?? this.snoozeMinutes,
     motivationMessage: motivationMessage ?? this.motivationMessage,
   );

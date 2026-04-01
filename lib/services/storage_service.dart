@@ -7,6 +7,7 @@ class StorageService {
   static const String _alarmsKey = 'alarms';
   static const String _userProfileKey = 'user_profile';
   static const String _firstRunKey = 'first_run';
+  static const String _authTokenKey = 'auth_token';
 
   static Future<List<Alarms>> getAlarms() async {
     final prefs = await SharedPreferences.getInstance();
@@ -56,6 +57,26 @@ class StorageService {
   static Future<void> saveUserProfile(UserProfile profile) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userProfileKey, jsonEncode(profile.toJson()));
+  }
+
+  static Future<void> saveAuthToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_authTokenKey, token);
+  }
+
+  static Future<String?> getAuthToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_authTokenKey);
+  }
+
+  static Future<bool> hasAuthToken() async {
+    final token = await getAuthToken();
+    return token != null && token.isNotEmpty;
+  }
+
+  static Future<void> clearAuthToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_authTokenKey);
   }
 
   static Future<bool> isFirstRun() async {

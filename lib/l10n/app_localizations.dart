@@ -121,6 +121,9 @@ abstract class AppLocalizations {
   String get snoozedFor;
   String snoozedForMinutes(int minutes);
   String get awake;
+  String get returnToDashboard;
+  String get dailyAlignment;
+  String get previewWakeup;
 
   // Common Actions
   String get confirm;

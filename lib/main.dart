@@ -11,7 +11,9 @@ import 'package:dawn_weaver/models/alarm.dart';
 import 'package:dawn_weaver/l10n/app_localizations_delegate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+import 'package:video_player/video_player.dart';
+import 'package:dawn_weaver/utils/virtual_character_video.dart';
+import 'package:dawn_weaver/app_route_observer.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final LanguageService languageService = LanguageService();
@@ -22,31 +24,55 @@ void main() async {
   await dotenv.load(fileName: ".env");
   final prefs = await SharedPreferences.getInstance();
 
-  if (prefs.getString('config') == null) {
-    final url = Uri.parse(
-        '${dotenv.env['base_url']}/api/v1/config'); // Replace with your URL
-    final response = await http.get(url);
-    if (response.statusCode == 200) {
-      await prefs.setString('config', response.body);
-    }
-  }
-
   final alarms = await StorageService.getAlarms();
 
-  // Check if user setup is complete
-  final bool isSetupComplete = prefs.getBool('setup_complete') ?? false;
+  // App session is now driven by backend-issued token existence.
+  final bool hasAuthToken = await StorageService.hasAuthToken();
+  if (!hasAuthToken) {
+    runApp(const DawnWeaverApp(showSetup: true));
+    return;
+  }
 
   final int? activeAlarmId = prefs.getInt('alarmActive');
   if (activeAlarmId != null && activeAlarmId != 0) {
-    final alarm = alarms.firstWhere((a) => a.id.hashCode == activeAlarmId);
-    bool result = await Alarm.isRinging(activeAlarmId);
-    if (result) {
-      runApp(ActiveAlarmApp(alarm: alarm, id: activeAlarmId));
-      return;
+    final settings = await Alarm.getAlarm(activeAlarmId);
+    Alarms? alarm;
+    final payload = settings?.payload;
+    if (payload != null && payload.isNotEmpty) {
+      try {
+        alarm = alarms.firstWhere((a) => a.id == payload);
+      } catch (_) {}
+    }
+    alarm ??= () {
+      try {
+        return alarms.firstWhere((a) => a.id.hashCode == activeAlarmId);
+      } catch (_) {
+        return null;
+      }
+    }();
+    if (alarm != null) {
+      final bool ringing = await Alarm.isRinging(activeAlarmId);
+      if (ringing) {
+        VideoPlayerController? preloaded;
+        if (alarm.virtualCharacter != 'default') {
+          preloaded = await preloadVirtualCharacterVideo(
+            alarm.virtualCharacter,
+            mute: alarm.muteVirtualCharacterAudio,
+          );
+        }
+        runApp(
+          ActiveAlarmApp(
+            alarm: alarm,
+            id: activeAlarmId,
+            preloadedVideoController: preloaded,
+          ),
+        );
+        return;
+      }
     }
   }
 
-  runApp(DawnWeaverApp(showSetup: !isSetupComplete));
+  runApp(DawnWeaverApp(showSetup: !hasAuthToken));
 }
 
 class DawnWeaverApp extends StatelessWidget {
@@ -61,6 +87,7 @@ class DawnWeaverApp extends StatelessWidget {
       builder: (context, child) {
         return MaterialApp(
           navigatorKey: navigatorKey,
+          navigatorObservers: [appRouteObserver],
           title: 'Dawn Weaver',
           debugShowCheckedModeBanner: false,
           theme: lightTheme,
@@ -87,8 +114,14 @@ class DawnWeaverApp extends StatelessWidget {
 class ActiveAlarmApp extends StatelessWidget {
   final Alarms alarm;
   final int id;
+  final VideoPlayerController? preloadedVideoController;
 
-  const ActiveAlarmApp({super.key, required this.alarm, required this.id});
+  const ActiveAlarmApp({
+    super.key,
+    required this.alarm,
+    required this.id,
+    this.preloadedVideoController,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +146,11 @@ class ActiveAlarmApp extends StatelessWidget {
             Locale('es'), // Spanish
             Locale('en'), // English
           ],
-          home: WakeupScreen(alarm: alarm, id: id),
+          home: WakeupScreen(
+            alarm: alarm,
+            id: id,
+            preloadedVideoController: preloadedVideoController,
+          ),
         );
       },
     );

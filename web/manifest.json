@@ -1,11 +1,11 @@
 {
-    "name": "advancedalarm",
-    "short_name": "advancedalarm",
+    "name": "SolRise",
+    "short_name": "SolRise",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "SolRise is a smart alarm app that wakes you up with a personalized experience, including daily horoscopes, motivational phrases, and dynamic virtual imagery, all set to your favorite tunes.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

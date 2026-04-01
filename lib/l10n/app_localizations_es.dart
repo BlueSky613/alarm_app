@@ -81,7 +81,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   // Alarms
   @override
-  String get alarms => 'Alarmas';
+  String get alarms => 'Mis Alarmas';
 
   @override
   String get addAlarm => 'Agregar alarma';
@@ -296,6 +296,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get awake => 'Estoy despierto!';
+
+  @override
+  String get returnToDashboard => 'Confirmar';
+
+  @override
+  String get dailyAlignment => 'Tu alineación diaria';
+
+  @override
+  String get previewWakeup => 'Vista previa del despertar';
 
   // Common Actions
   @override

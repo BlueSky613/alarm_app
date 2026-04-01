@@ -4,11 +4,13 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
+  file_selector_windows
   flutter_timezone
   flutter_tts
   flutter_volume_controller
   geolocator_windows
   permission_handler_windows
+  webcrypto
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

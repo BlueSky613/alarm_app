@@ -10,13 +10,13 @@
 
     <application
         android:usesCleartextTraffic="true"
-        android:label="advancedalarm"
+        android:label="SolRise"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
@@ -34,6 +34,12 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="dawnweaver" />
             </intent-filter>
         </activity>
 
@@ -70,5 +76,21 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+    </queries>
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="com.king.solrise" />
+        </intent>
+    </queries>
+    <!-- Required for MWA local association (signAndSendTransactions with Phantom) -->
+    <queries>
+        <intent>
+            <action android:name="com.solana.mobilewalletadapter.walletlib.scenario.LocalAssociationScenario.BIND" />
+        </intent>
+    </queries>
+    <queries>
+        <package android:name="app.phantom" />
     </queries>
 </manifest>
