@@ -8,6 +8,7 @@ import 'package:dawn_weaver/screens/settings_screen.dart';
 import 'package:dawn_weaver/services/premium_payment_service.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
 import 'package:dawn_weaver/services/wallet_api_service.dart';
+import 'package:dawn_weaver/services/wallet_balance_service.dart';
 import 'package:flutter/material.dart';
 import 'package:solana/dto.dart' show Encoding;
 import 'package:solana/solana.dart';
@@ -109,6 +110,60 @@ class _PremiumScreenState extends State<PremiumScreen> {
     setState(() => _upgrading = true);
 
     try {
+      // Check wallet balances before proceeding.
+      final balances = await WalletBalanceService.fetchSkrAndSol(wallet);
+      if (balances.skr < premiumPriceSkr || balances.sol < 0.0001) {
+        if (mounted) {
+          setState(() => _upgrading = false);
+          await showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: const Color(0xFF1A1A2E),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
+              ),
+              title: const Text(
+                'Insufficient Balance',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (balances.skr < premiumPriceSkr)
+                    Text(
+                      'SKR: ${balances.skr.toStringAsFixed(2)} (need $premiumPriceSkr)',
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
+                  if (balances.sol < 0.0001)
+                    Text(
+                      'SOL: ${balances.sol.toStringAsFixed(6)} (need ≥ 0.0001)',
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Please top up your wallet before upgrading.',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('OK', style: TextStyle(color: _kPrimary)),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+
       // Build the tx first — we already have the sender address from the profile.
       final unsigned = await PremiumPaymentService.buildPremiumSkrPaymentTx(
         client: _solanaClient,

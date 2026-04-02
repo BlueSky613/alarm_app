@@ -237,7 +237,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
   Widget _buildHeader() {
     final name = _userProfile?.name;
     final walletAddress = _userProfile?.solanaAddress;
-    final tierLabel = name != null && name.isNotEmpty ? 'Seeker Pro' : 'Seeker';
+    final tierLabel = _userProfile?.isPremium == true ? 'Seeker Pro' : 'Seeker';
     final subtitle = walletAddress != null && walletAddress.isNotEmpty
         ? 'Solana Mainnet'
         : 'Solana Mainnet';
@@ -431,12 +431,26 @@ class _HomePageState extends State<HomePage> with RouteAware {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              DateFormat('HH:mm').format(nextAlarm.time),
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: DateFormat('hh:mm').format(nextAlarm.time),
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: ' ${DateFormat('a').format(nextAlarm.time)}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -824,7 +838,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            l10n.quickAlarmSetFor(DateFormat('HH:mm').format(quickAlarmTime)),
+            l10n.quickAlarmSetFor(DateFormat('hh:mm a').format(quickAlarmTime)),
           ),
           backgroundColor: Theme.of(context).colorScheme.primary,
         ),

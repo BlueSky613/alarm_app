@@ -1063,6 +1063,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
     }
 
     String authToken = '';
+    bool isPremiumFromServer = false;
     setState(() => _isSubmittingProfile = true);
     try {
       final response = await http.post(
@@ -1118,6 +1119,9 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
         body = jsonDecode(response.body) as Map<String, dynamic>?;
       } catch (_) {}
       authToken = (body?['token'] as String?) ?? '';
+      final userMap = body?['user'] as Map<String, dynamic>?;
+      isPremiumFromServer =
+          (userMap?['premium'] as bool?) ?? false;
       if (authToken.isEmpty) {
         if (mounted) {
           setState(() => _isSubmittingProfile = false);
@@ -1161,7 +1165,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
       weather: "",
       solanaAddress: wallet,
       solanaBalance: _walletBalance,
-      isPremium: false,
+      isPremium: isPremiumFromServer,
     );
 
     await StorageService.saveUserProfile(profile);

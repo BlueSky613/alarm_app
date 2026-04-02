@@ -247,20 +247,27 @@ class AlarmService {
 
     final assetAudioPath = await resolveAssetAudioPath(alarm.soundPath);
 
+    final profile = await StorageService.getUserProfile();
+    final soundEnabled = profile?.soundNotificationsEnabled ?? true;
+    final hapticEnabled = profile?.hapticEnabled ?? true;
+
     final settings = AlarmSettings(
       id: notificationId ?? id,
       dateTime: tzScheduledDate,
       assetAudioPath: assetAudioPath,
-      volumeSettings: VolumeSettings.fade(
-          fadeDuration: Duration(seconds: 10),
-          volumeEnforced: false,
-          volume: 0.8),
+      volumeSettings: soundEnabled
+          ? VolumeSettings.fade(
+              fadeDuration: Duration(seconds: 10),
+              volumeEnforced: false,
+              volume: 0.8)
+          : VolumeSettings.fixed(volume: 0.0),
       notificationSettings: NotificationSettings(
           title: title,
           body: body,
           stopButton: 'Stop',
           icon: '@mipmap/ic_launcher',
           iconColor: Colors.red),
+      vibrate: hapticEnabled,
       loopAudio: true,
       payload: alarm.id,
     );

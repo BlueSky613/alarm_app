@@ -266,7 +266,7 @@ class _WakeupAlignmentScreenState extends State<WakeupAlignmentScreen> {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: sol != null ? sol.toStringAsFixed(2) : '—',
+                    text: sol != null ? sol.toStringAsFixed(6) : '—',
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
