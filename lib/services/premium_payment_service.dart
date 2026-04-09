@@ -15,7 +15,7 @@ class PremiumPaymentException implements Exception {
   String toString() => message;
 }
 
-const int premiumPriceSkr = 9;
+const int premiumPriceSkr = 199;
 
 /// Wraps a [SignedTx] (with placeholder sigs) so the wallet adapter can
 /// encode it via [TransactionSerializableMixin].

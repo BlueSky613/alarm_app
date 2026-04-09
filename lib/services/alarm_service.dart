@@ -23,6 +23,12 @@ class AlarmService {
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
+  static bool _wakeupScreenActive = false;
+  static final Set<int> _handledAlarmIds = {};
+
+  /// Timestamp until which all ringStream events are suppressed.
+  /// Set after dismissing an alarm to block stale/queued events.
+  static DateTime _suppressRingUntil = DateTime(2000);
 
   static bool _isDeviceFilePath(String soundPath) {
     final lower = soundPath.toLowerCase();
@@ -42,7 +48,7 @@ class AlarmService {
     if (!await file.exists()) {
       await file.parent.create(recursive: true);
       try {
-        final resp = await http.get(Uri.parse(url));
+        final resp = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 30));
         if (resp.statusCode == 200) {
           await file.writeAsBytes(resp.bodyBytes);
         } else {
@@ -53,6 +59,16 @@ class AlarmService {
       }
     }
     return rel;
+  }
+
+  /// Returns the full absolute path for a cached audio file (for preview playback).
+  static Future<String?> resolveFullAudioPath(String soundPath) async {
+    final rel = await resolveAssetAudioPath(soundPath);
+    if (rel.startsWith('assets/')) return null; // asset, not a file path
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dir.path, rel));
+    if (await file.exists()) return file.path;
+    return null;
   }
 
   /// The `alarm` package only accepts bundled assets or paths relative to app
@@ -106,6 +122,17 @@ class AlarmService {
     await _requestPermissions();
 
     Alarm.ringStream.stream.listen((alarmSettings) async {
+      // Block duplicate / stale events.
+      if (_wakeupScreenActive ||
+          _handledAlarmIds.contains(alarmSettings.id) ||
+          DateTime.now().isBefore(_suppressRingUntil)) {
+        debugPrint('Wakeup: suppressed ring id=${alarmSettings.id}');
+        await Alarm.stop(alarmSettings.id);
+        return;
+      }
+      _wakeupScreenActive = true;
+      _handledAlarmIds.add(alarmSettings.id);
+
       try {
         final alarms = await StorageService.getAlarms();
         Alarms? alarm;
@@ -132,7 +159,10 @@ class AlarmService {
               mute: alarm.muteVirtualCharacterAudio,
             );
           }
-          if (navigatorKey.currentState?.mounted != true) return;
+          if (navigatorKey.currentState?.mounted != true) {
+            _wakeupScreenActive = false;
+            return;
+          }
           navigatorKey.currentState?.push(
             MaterialPageRoute(
               builder: (context) => WakeupScreen(
@@ -143,9 +173,11 @@ class AlarmService {
             ),
           );
         } else {
+          _wakeupScreenActive = false;
           debugPrint('Wakeup: alarm not found for id=${alarmSettings.id}');
         }
       } catch (e) {
+        _wakeupScreenActive = false;
         debugPrint('Error handling ringStream: $e');
       }
     });
@@ -200,7 +232,8 @@ class AlarmService {
 
   static DateTime _getNextRepeatingDate(
       DateTime baseDate, Set<int> repeatDays) {
-    var date = baseDate;
+    // baseDate's time has already passed today, so start from tomorrow.
+    var date = baseDate.add(const Duration(days: 1));
     while (!repeatDays.contains(date.weekday % 7)) {
       date = date.add(const Duration(days: 1));
     }
@@ -235,6 +268,7 @@ class AlarmService {
     int? notificationId,
   }) async {
     final id = alarm.id.hashCode;
+    _handledAlarmIds.remove(notificationId ?? id);
     final prefs = await SharedPreferences.getInstance();
 
     final label = alarm.label.trim();
@@ -250,6 +284,7 @@ class AlarmService {
     final profile = await StorageService.getUserProfile();
     final soundEnabled = profile?.soundNotificationsEnabled ?? true;
     final hapticEnabled = profile?.hapticEnabled ?? true;
+    final alarmVolume = profile?.alarmVolume ?? 0.8;
 
     final settings = AlarmSettings(
       id: notificationId ?? id,
@@ -259,7 +294,7 @@ class AlarmService {
           ? VolumeSettings.fade(
               fadeDuration: Duration(seconds: 10),
               volumeEnforced: false,
-              volume: 0.8)
+              volume: alarmVolume)
           : VolumeSettings.fixed(volume: 0.0),
       notificationSettings: NotificationSettings(
           title: title,
@@ -277,6 +312,14 @@ class AlarmService {
     prefs.setInt('alarmActive', notificationId ?? id);
   }
 
+  /// Call when the wakeup flow finishes (wake/snooze/dismiss).
+  /// Suppresses all ring events for the next 5 seconds to block
+  /// stale or queued events from the alarm package.
+  static void clearWakeupScreenActive() {
+    _wakeupScreenActive = false;
+    _suppressRingUntil = DateTime.now().add(const Duration(seconds: 5));
+  }
+
   static Future<void> cancelAlarm(String alarmId) async {
     final saved = await Alarm.getAlarms();
     for (final a in saved) {
@@ -292,13 +335,17 @@ class AlarmService {
 
   static Future<void> snoozeAlarm(String alarmId, int minutes) async {
     final alarms = await StorageService.getAlarms();
-    final alarm = alarms.firstWhere((a) => a.id == alarmId);
+    final original = alarms.firstWhere((a) => a.id == alarmId);
 
     final snoozeTime = DateTime.now().add(Duration(minutes: minutes));
-    final updated = alarm.copyWith(time: snoozeTime);
+    final snoozeAlarm = original.copyWith(
+      id: 'snooze_${DateTime.now().millisecondsSinceEpoch}',
+      time: snoozeTime,
+      label: 'Snooze',
+    );
 
-    await StorageService.saveAlarm(updated);
-    await scheduleAlarm(updated);
+    await StorageService.saveAlarm(snoozeAlarm);
+    await scheduleAlarm(snoozeAlarm);
   }
 
   static Future<void> rescheduleAllAlarms() async {

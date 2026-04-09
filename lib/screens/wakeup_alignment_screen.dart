@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dawn_weaver/models/alarm.dart';
 import 'package:dawn_weaver/models/user_profile.dart';
+import 'package:dawn_weaver/screens/home_screen.dart';
 import 'package:dawn_weaver/services/wake_flow_completion.dart';
 import 'package:dawn_weaver/services/wallet_balance_service.dart';
 import 'package:dawn_weaver/l10n/app_localizations.dart';
@@ -46,7 +47,10 @@ class _WakeupAlignmentScreenState extends State<WakeupAlignmentScreen> {
     _leaving = true;
     await applyWakeExitSideEffects(widget.alarm, isPreview: false);
     if (!mounted) return;
-    Navigator.of(context).pop();
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomePage()),
+      (route) => false,
+    );
   }
 
   @override

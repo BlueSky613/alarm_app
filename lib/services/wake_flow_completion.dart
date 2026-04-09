@@ -12,12 +12,13 @@ Future<void> applyWakeExitSideEffects(
   final prefs = await SharedPreferences.getInstance();
 
   if (!isPreview &&
-      (alarm.label == 'Quick Alarm' || alarm.label == 'Power Nap')) {
+      (alarm.label == 'Quick Alarm' || alarm.label == 'Power Nap' || alarm.label == 'Snooze')) {
     await StorageService.deleteAlarm(alarm.id);
     await AlarmService.cancelAlarm(alarm.id);
   } else if (!isPreview && alarm.repeatDays.isEmpty) {
-    await StorageService.saveAlarm(alarm.copyWith(isActive: false));
+    // Keep active — reschedule for tomorrow.
     await AlarmService.cancelAlarm(alarm.id);
+    await AlarmService.scheduleAlarm(alarm);
   }
 
   if (!isPreview) {

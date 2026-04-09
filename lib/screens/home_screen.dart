@@ -106,25 +106,13 @@ class _HomePageState extends State<HomePage> with RouteAware {
     final activeAlarms = _alarms.where((alarm) => alarm.isActive).toList();
     if (activeAlarms.isEmpty) return null;
 
-    final now = DateTime.now();
     Alarms? nextAlarm;
     DateTime? nextTime;
 
     for (final alarm in activeAlarms) {
-      var alarmTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        alarm.time.hour,
-        alarm.time.minute,
-      );
-
-      if (alarmTime.isBefore(now)) {
-        alarmTime = alarmTime.add(const Duration(days: 1));
-      }
-
-      if (nextTime == null || alarmTime.isBefore(nextTime)) {
-        nextTime = alarmTime;
+      final fireTime = _nextFireTime(alarm);
+      if (nextTime == null || fireTime.isBefore(nextTime)) {
+        nextTime = fireTime;
         nextAlarm = alarm;
       }
     }
@@ -136,28 +124,53 @@ class _HomePageState extends State<HomePage> with RouteAware {
     final nextAlarm = _nextAlarm;
     if (nextAlarm == null) return '';
 
+    final fireTime = _nextFireTime(nextAlarm);
+    final now = DateTime.now();
+    final difference = fireTime.difference(now);
+    final days = difference.inDays;
+    final hours = difference.inHours % 24;
+    final minutes = difference.inMinutes % 60 + 1;
+
+    if (days > 0) {
+      return '${days}d ${hours}h ${minutes}m';
+    } else if (hours > 0) {
+      return '${hours}h ${minutes}m';
+    } else {
+      return '${minutes}m';
+    }
+  }
+
+  /// Returns the actual next fire time for an alarm, accounting for repeat days.
+  DateTime _nextFireTime(Alarms alarm) {
     final now = DateTime.now();
     var alarmTime = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      nextAlarm.time.hour,
-      nextAlarm.time.minute,
+      now.year, now.month, now.day,
+      alarm.time.hour, alarm.time.minute,
     );
 
+    if (alarm.repeatDays.isEmpty) {
+      if (alarmTime.isBefore(now)) {
+        alarmTime = alarmTime.add(const Duration(days: 1));
+      }
+      return alarmTime;
+    }
+
+    // For repeating alarms, find the next matching weekday.
     if (alarmTime.isBefore(now)) {
       alarmTime = alarmTime.add(const Duration(days: 1));
     }
-
-    final difference = alarmTime.difference(now);
-    final hours = difference.inHours;
-    final minutes = difference.inMinutes % 60 + 1;
-
-    if (hours == 0) {
-      return '${minutes}m';
-    } else {
-      return '${hours}h ${minutes}m';
+    while (!alarm.repeatDays.contains(alarmTime.weekday % 7)) {
+      alarmTime = alarmTime.add(const Duration(days: 1));
     }
+    return alarmTime;
+  }
+
+  bool _isAlarmToday(Alarms alarm) {
+    final fireTime = _nextFireTime(alarm);
+    final now = DateTime.now();
+    return fireTime.year == now.year &&
+        fireTime.month == now.month &&
+        fireTime.day == now.day;
   }
 
   void _openAlarmsList() {
@@ -216,8 +229,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
                 const SizedBox(height: 24),
                 _buildQuickActions(),
                 const SizedBox(height: 24),
-                _buildAIBanner(),
-                const SizedBox(height: 24),
+                if (_userProfile?.isPremium != true) ...[
+                  _buildAIBanner(),
+                  const SizedBox(height: 24),
+                ],
               ],
             ),
           ),
@@ -403,7 +418,17 @@ class _HomePageState extends State<HomePage> with RouteAware {
             ),
           ),
           child: nextAlarm != null
-              ? Column(
+              ? GestureDetector(
+                  onTap: () {
+                    Navigator.of(context)
+                        .push(MaterialPageRoute(
+                          builder: (_) => AlarmsListScreen(
+                            highlightAlarmId: nextAlarm.id,
+                          ),
+                        ))
+                        .then((_) => _loadData());
+                  },
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
@@ -422,6 +447,37 @@ class _HomePageState extends State<HomePage> with RouteAware {
                             color: Colors.white,
                           ),
                         ),
+                        if (nextAlarm.id.startsWith('quick_') || nextAlarm.id.startsWith('snooze_')) ...[
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () async {
+                              await AlarmService.cancelAlarm(nextAlarm.id);
+                              await StorageService.deleteAlarm(nextAlarm.id);
+                              _loadData();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.redAccent.withValues(alpha: 0.4),
+                                ),
+                              ),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.redAccent,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -458,7 +514,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                               nextAlarm.label.isNotEmpty
                                   ? nextAlarm.label
                                   : (nextAlarm.repeatDays.isEmpty
-                                        ? (nextAlarm.isActive
+                                        ? (_isAlarmToday(nextAlarm)
                                               ? l10n.today
                                               : l10n.tomorrow)
                                         : nextAlarm.repeatString),
@@ -493,7 +549,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                       ],
                     ),
                   ],
-                )
+                ))
               : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

@@ -16,7 +16,8 @@ const Color _kPrimary = Color(0xFF0EF196);
 const Color _kBackgroundDark = Color(0xFF000000);
 
 class AlarmsListScreen extends StatefulWidget {
-  const AlarmsListScreen({super.key});
+  final String? highlightAlarmId;
+  const AlarmsListScreen({super.key, this.highlightAlarmId});
 
   @override
   State<AlarmsListScreen> createState() => _AlarmsListScreenState();
@@ -24,11 +25,18 @@ class AlarmsListScreen extends StatefulWidget {
 
 class _AlarmsListScreenState extends State<AlarmsListScreen> {
   List<Alarms> _alarms = [];
+  String? _highlightId;
 
   @override
   void initState() {
     super.initState();
+    _highlightId = widget.highlightAlarmId;
     _loadAlarms();
+    if (_highlightId != null) {
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) setState(() => _highlightId = null);
+      });
+    }
   }
 
   Future<void> _loadAlarms() async {
@@ -41,7 +49,7 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
   @override
   Widget build(BuildContext context) {
     final nonQuickAlarms = _alarms
-        .where((a) => !a.id.contains('quick'))
+        .where((a) => !a.id.startsWith('quick_') && !a.id.startsWith('snooze_'))
         .toList();
 
     return Scaffold(
@@ -75,6 +83,7 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
                                   padding: const EdgeInsets.only(bottom: 16),
                                   child: AlarmCard(
                                     alarm: alarm,
+                                    isHighlighted: _highlightId == alarm.id,
                                     onToggle: (isActive) =>
                                         _toggleAlarm(alarm.id, isActive),
                                     onEdit: () => _editAlarm(alarm),
@@ -460,6 +469,7 @@ class _AlarmsListScreenState extends State<AlarmsListScreen> {
 
 class AlarmCard extends StatelessWidget {
   final Alarms alarm;
+  final bool isHighlighted;
   final Function(bool) onToggle;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -467,10 +477,20 @@ class AlarmCard extends StatelessWidget {
   const AlarmCard({
     super.key,
     required this.alarm,
+    this.isHighlighted = false,
     required this.onToggle,
     required this.onEdit,
     required this.onDelete,
   });
+
+  bool _isAlarmToday(Alarms alarm) {
+    final now = DateTime.now();
+    final alarmTime = DateTime(
+      now.year, now.month, now.day,
+      alarm.time.hour, alarm.time.minute,
+    );
+    return alarmTime.isAfter(now);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -492,13 +512,17 @@ class AlarmCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
+              color: isHighlighted
+                  ? _kPrimary.withValues(alpha: 0.1)
+                  : Colors.white.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: alarm.isActive
-                    ? _kPrimary.withValues(alpha: 0.1)
-                    : Colors.white.withValues(alpha: 0.05),
-                width: 1,
+                color: isHighlighted
+                    ? _kPrimary.withValues(alpha: 0.6)
+                    : alarm.isActive
+                        ? _kPrimary.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.05),
+                width: isHighlighted ? 2 : 1,
               ),
             ),
             child: Column(
@@ -569,7 +593,7 @@ class AlarmCard extends StatelessWidget {
                         scrollDirection: Axis.horizontal,
                         child: Text(
                           (alarm.repeatDays.isEmpty
-                                  ? (alarm.isActive
+                                  ? (_isAlarmToday(alarm)
                                       ? l10n.today
                                       : l10n.tomorrow)
                                   : alarm.repeatString)

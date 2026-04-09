@@ -1,11 +1,14 @@
 import 'package:alarm/alarm.dart';
 import 'package:dawn_weaver/screens/wakeup_alignment_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:dawn_weaver/models/alarm.dart';
 import 'package:dawn_weaver/models/user_profile.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
 import 'package:dawn_weaver/l10n/app_localizations.dart';
+import 'package:dawn_weaver/screens/home_screen.dart';
 import 'package:dawn_weaver/services/alarm_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dawn_weaver/utils/virtual_character_video.dart';
@@ -39,6 +42,7 @@ class _WakeupScreenState extends State<WakeupScreen>
   DateTime _currentTime = DateTime.now();
   late Stream<DateTime> _timeStream;
   UserProfile? _profile;
+  bool _muted = false;
 
   @override
   void initState() {
@@ -52,6 +56,7 @@ class _WakeupScreenState extends State<WakeupScreen>
       end: 1.0,
     ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
     _fadeController.forward();
+    HardwareKeyboard.instance.addHandler(_onHardwareKey);
     _loadProfile();
     if (widget.preloadedVideoController != null) {
       _videoController = widget.preloadedVideoController;
@@ -98,6 +103,22 @@ class _WakeupScreenState extends State<WakeupScreen>
       });
   }
 
+  bool _onHardwareKey(KeyEvent event) {
+    if (event is KeyDownEvent &&
+        (event.logicalKey == LogicalKeyboardKey.audioVolumeDown ||
+         event.logicalKey == LogicalKeyboardKey.audioVolumeUp ||
+         event.logicalKey == LogicalKeyboardKey.audioVolumeMute)) {
+      if (!_muted) {
+        _muted = true;
+        AlarmService.clearWakeupScreenActive();
+        Alarm.stop(widget.id);
+        AlarmService.cancelAlarm(widget.alarm.id);
+      }
+      return true;
+    }
+    return false;
+  }
+
   String _formatTimeAmPm(BuildContext context) {
     final locale = Localizations.localeOf(context).toString();
     return DateFormat.jm(locale).format(_currentTime);
@@ -106,11 +127,19 @@ class _WakeupScreenState extends State<WakeupScreen>
   Future<void> _snoozeAlarm() async {
     if (widget.isPreview) return;
 
+    AlarmService.clearWakeupScreenActive();
+    await Alarm.stop(widget.id);
+    await AlarmService.cancelAlarm(widget.alarm.id);
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt('alarmActive', 0);
     await AlarmService.snoozeAlarm(widget.alarm.id, widget.alarm.snoozeMinutes);
 
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomePage()),
+      (route) => false,
+    );
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -127,14 +156,25 @@ class _WakeupScreenState extends State<WakeupScreen>
   Future<void> _onWakePressed() async {
     if (widget.isPreview) return;
 
+    // Suppress stale ring events BEFORE stopping, so any queued
+    // ringStream event that fires during the async gap is blocked.
+    AlarmService.clearWakeupScreenActive();
     await Alarm.stop(widget.id);
+    await AlarmService.cancelAlarm(widget.alarm.id);
+    // Clear the alarmActive pref so a cold-start won't re-show this alarm.
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt('alarmActive', 0);
 
     if (!mounted) return;
 
-    // Replace wakeup so only alignment sits above the previous route (e.g. home).
-    // Do not await: this route is disposed after replacement.
-    Navigator.of(context).pushReplacement(
-      wakeupAlignmentRoute(alarm: widget.alarm, profile: _profile),
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => WakeupAlignmentScreen(
+          alarm: widget.alarm,
+          profile: _profile,
+        ),
+      ),
+      (route) => false,
     );
   }
 
@@ -325,6 +365,8 @@ class _WakeupScreenState extends State<WakeupScreen>
 
   @override
   void dispose() {
+    AlarmService.clearWakeupScreenActive();
+    HardwareKeyboard.instance.removeHandler(_onHardwareKey);
     _fadeController.dispose();
     _videoController?.dispose();
     super.dispose();

@@ -728,7 +728,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                         fit: StackFit.expand,
                         children: [
                           ColorFiltered(
-                            colorFilter: isSelected && unlocked
+                            colorFilter: unlocked
                                 ? const ColorFilter.mode(
                                     Colors.transparent,
                                     BlendMode.dst,
@@ -1247,7 +1247,12 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
                                   playingLink = link;
                                 });
                                 await _previewPlayer.stop();
-                                await _previewPlayer.play(UrlSource(link));
+                                final cachedPath = await AlarmService.resolveFullAudioPath(link);
+                                if (cachedPath != null) {
+                                  await _previewPlayer.play(DeviceFileSource(cachedPath));
+                                } else {
+                                  await _previewPlayer.play(UrlSource(link));
+                                }
                               },
                             );
                           },
@@ -1312,6 +1317,7 @@ class _AddEditAlarmScreenState extends State<AddEditAlarmScreen> {
         );
       },
     );
+    await _previewPlayer.stop();
   }
 
   Widget _buildRepeatDays() {

@@ -26,6 +26,7 @@ class UserProfile {
   final bool isPremium;
   final bool hapticEnabled;
   final bool soundNotificationsEnabled;
+  final double alarmVolume;
   /// `default` | `asset:assets/avatar/...` | `file:<absolute path>`
   final String avatarRef;
 
@@ -41,6 +42,7 @@ class UserProfile {
     this.isPremium = false,
     this.hapticEnabled = true,
     this.soundNotificationsEnabled = true,
+    this.alarmVolume = 0.8,
     this.avatarRef = 'default',
   });
 
@@ -74,6 +76,7 @@ class UserProfile {
         'isPremium': isPremium,
         'hapticEnabled': hapticEnabled,
         'soundNotificationsEnabled': soundNotificationsEnabled,
+        'alarmVolume': alarmVolume,
         'avatarRef': avatarRef,
       };
 
@@ -93,6 +96,7 @@ class UserProfile {
         hapticEnabled: json['hapticEnabled'] as bool? ?? true,
         soundNotificationsEnabled:
             json['soundNotificationsEnabled'] as bool? ?? true,
+        alarmVolume: (json['alarmVolume'] as num?)?.toDouble() ?? 0.8,
         avatarRef: json['avatarRef'] as String? ?? 'default',
       );
 
@@ -108,6 +112,7 @@ class UserProfile {
     bool? isPremium,
     bool? hapticEnabled,
     bool? soundNotificationsEnabled,
+    double? alarmVolume,
     String? avatarRef,
   }) =>
       UserProfile(
@@ -123,6 +128,7 @@ class UserProfile {
         hapticEnabled: hapticEnabled ?? this.hapticEnabled,
         soundNotificationsEnabled:
             soundNotificationsEnabled ?? this.soundNotificationsEnabled,
+        alarmVolume: alarmVolume ?? this.alarmVolume,
         avatarRef: avatarRef ?? this.avatarRef,
       );
 }

@@ -14,7 +14,7 @@ class WalletBalanceService {
   );
 
   /// Minimum SKR required to create or update an alarm.
-  static const double minimumSkrToSaveAlarm = 0;
+  static const double minimumSkrToSaveAlarm = 20;
 
   static Future<double> fetchSkrBalance(String address) async {
     final result = await _client.rpcClient.getTokenAccountsByOwner(

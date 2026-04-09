@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:dawn_weaver/models/user_profile.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
 import 'package:dawn_weaver/services/alarm_service.dart';
+import 'package:dawn_weaver/screens/legal_page.dart';
 import 'package:dawn_weaver/services/wallet_api_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dawn_weaver/utils/api_base_url.dart';
@@ -35,6 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _isEditing = false;
   bool _hapticEnabled = true;
   bool _soundNotificationsEnabled = true;
+  double _alarmVolume = 0.8;
   ImageProvider _avatarImage = const AssetImage('assets/solrise_logo.png');
 
   static const Color _kPrimaryGreen = Color(0xFF0EF196);
@@ -313,6 +315,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         _nameController.text = profile.name;
         _hapticEnabled = profile.hapticEnabled;
         _soundNotificationsEnabled = profile.soundNotificationsEnabled;
+        _alarmVolume = profile.alarmVolume;
         _avatarImage = avatarImageProviderFromRef(profile.avatarRef);
       });
     }
@@ -325,6 +328,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     final updated = _userProfile!.copyWith(hapticEnabled: next);
     await StorageService.saveUserProfile(updated);
     if (mounted) setState(() => _userProfile = updated);
+    await AlarmService.rescheduleAllAlarms();
   }
 
   Future<void> _persistToggleSound() async {
@@ -334,6 +338,16 @@ class _SettingsScreenState extends State<SettingsScreen>
     final updated = _userProfile!.copyWith(soundNotificationsEnabled: next);
     await StorageService.saveUserProfile(updated);
     if (mounted) setState(() => _userProfile = updated);
+    await AlarmService.rescheduleAllAlarms();
+  }
+
+  Future<void> _persistAlarmVolume(double value) async {
+    if (_userProfile == null) return;
+    setState(() => _alarmVolume = value);
+    final updated = _userProfile!.copyWith(alarmVolume: value);
+    await StorageService.saveUserProfile(updated);
+    if (mounted) setState(() => _userProfile = updated);
+    await AlarmService.rescheduleAllAlarms();
   }
 
   @override
@@ -407,6 +421,19 @@ class _SettingsScreenState extends State<SettingsScreen>
                                 _buildProfileSection(),
                                 const SizedBox(height: 32),
                                 _buildGeneralPreferencesSection(),
+                                const SizedBox(height: 32),
+                                _buildLegalSection(),
+                                const SizedBox(height: 24),
+                                Center(
+                                  child: Text(
+                                    '\u00a9 2026 SolRise Team. All rights reserved.',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.white.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
                               ],
                             ),
                           ),
@@ -483,8 +510,54 @@ class _SettingsScreenState extends State<SettingsScreen>
                     icon: Icons.notifications_active,
                     title: 'Sound Notifications',
                     value: _soundNotificationsEnabled,
-                    showDivider: false,
+                    showDivider: true,
                     onToggle: () => _persistToggleSound(),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: Row(
+                      children: [
+                        Icon(Icons.volume_up, size: 22, color: Colors.white.withValues(alpha: 0.6)),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Alarm Volume',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: SliderTheme(
+                            data: SliderThemeData(
+                              activeTrackColor: _kPrimaryGreen,
+                              inactiveTrackColor: Colors.white.withValues(alpha: 0.12),
+                              thumbColor: _kPrimaryGreen,
+                              overlayColor: _kPrimaryGreen.withValues(alpha: 0.15),
+                              trackHeight: 4,
+                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                            ),
+                            child: Slider(
+                              value: _alarmVolume,
+                              min: 0.0,
+                              max: 1.0,
+                              onChanged: (v) => setState(() => _alarmVolume = v),
+                              onChangeEnd: (v) => _persistAlarmVolume(v),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 36,
+                          child: Text(
+                            '${(_alarmVolume * 100).round()}%',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -492,6 +565,55 @@ class _SettingsScreenState extends State<SettingsScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildLegalSection() {
+    final isSpanish = _userProfile?.language == 'es';
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withOpacity(0.06)),
+          ),
+          child: Column(
+            children: [
+              _buildGlassRow(
+                icon: Icons.privacy_tip_outlined,
+                title: isSpanish ? 'Política de privacidad' : 'Privacy Policy',
+                value: '',
+                showDivider: true,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const LegalPage(
+                      title: 'Privacy Policy',
+                      type: LegalPageType.privacy,
+                    ),
+                  ),
+                ),
+              ),
+              _buildGlassRow(
+                icon: Icons.description_outlined,
+                title: isSpanish ? 'Términos de servicio' : 'Terms of Service',
+                value: '',
+                showDivider: false,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const LegalPage(
+                      title: 'Software License Agreement',
+                      type: LegalPageType.license,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -596,7 +718,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(999),
                 color: value
-                    ? theme.colorScheme.primary
+                    ? _kPrimaryGreen
                     : Colors.white.withOpacity(0.12),
               ),
               padding: const EdgeInsets.all(3),

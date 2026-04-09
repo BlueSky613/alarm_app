@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:dawn_weaver/models/user_profile.dart';
 import 'package:dawn_weaver/services/storage_service.dart';
+import 'package:dawn_weaver/screens/legal_page.dart';
 import 'package:solana/solana.dart';
 import 'package:solana/dto.dart';
 import 'package:solana_wallet_adapter/solana_wallet_adapter.dart';
@@ -36,6 +37,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
   double? _walletBalance;
   bool _isConnectingWallet = false;
   bool _isSubmittingProfile = false;
+  bool _agreedToTerms = false;
 
   final Map<ZodiacSign, String> _zodiacNames = {
     ZodiacSign.aries: 'Aries',
@@ -424,7 +426,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  isSpanish ? 'INICIALIZANDO SOLRISE' : 'INITIALIZING SOLRISE',
+                  isSpanish ? 'INICIALIZANDO SOLRISE' : 'INITIALIZING SOLRISE ALARM',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     letterSpacing: 4,
@@ -588,7 +590,7 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
     final signName = _zodiacNames[_selectedZodiacSign] ?? '';
     final hasUniversalIdentity = _nameController.text.trim().isNotEmpty;
     final isWalletConnected = _walletAddress != null;
-    final canConfirm = hasUniversalIdentity && isWalletConnected;
+    final canConfirm = hasUniversalIdentity && isWalletConnected && _agreedToTerms;
     final dateRange = _zodiacDates[_selectedZodiacSign];
     final shortDesc = isSpanish
         ? (_zodiacShortDescEs[_selectedZodiacSign] ?? '')
@@ -660,6 +662,90 @@ class _UserSetupScreenState extends State<UserSetupScreen> {
               ),
               const SizedBox(height: 16),
               _buildNameInput(),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      value: _agreedToTerms,
+                      onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
+                      activeColor: _kPrimary,
+                      side: BorderSide(color: Colors.white.withOpacity(0.4)),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
+                      child: Text.rich(
+                        TextSpan(
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.6),
+                            height: 1.4,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: isSpanish ? 'Acepto la ' : 'I agree to the ',
+                            ),
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const LegalPage(
+                                      title: 'Privacy Policy',
+                                      type: LegalPageType.privacy,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  isSpanish ? 'Política de Privacidad' : 'Privacy Policy',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: _kPrimary,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: _kPrimary,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            TextSpan(
+                              text: isSpanish ? ' y los ' : ' and ',
+                            ),
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const LegalPage(
+                                      title: 'Terms of Service',
+                                      type: LegalPageType.license,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  isSpanish ? 'Términos de Servicio' : 'Terms of Service',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: _kPrimary,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: _kPrimary,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
